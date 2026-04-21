@@ -7,7 +7,7 @@ services:
     plan: free
     envVars:
       - key: ALLOWED_ORIGINS
-        value: https://aes-frontend.onrender.com
+        value: https://aes-frontend-5k2y.onrender.com
     healthCheckPath: /
 
   - type: web
@@ -18,7 +18,7 @@ services:
     staticPublishPath: ./build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://aes-backend.onrender.com
+        value: https://aes-backend-4hgs.onrender.com
     routes:
       - type: rewrite
         source: /*
