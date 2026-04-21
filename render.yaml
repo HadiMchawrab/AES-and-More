@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: aes-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://aes-frontend.onrender.com
+    healthCheckPath: /
+
+  - type: web
+    name: aes-frontend
+    runtime: static
+    rootDir: ./frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://aes-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

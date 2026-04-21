@@ -94,6 +94,9 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             {keyFormat === 'text' ? '16, 24, or 32 chars' : '32, 48, or 64 hex chars'}
           </span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            {key.length} / {keyFormat === 'text' ? 'chars' : 'hex chars'}
+          </span>
         </div>
         <input
           type="text"
