@@ -9,6 +9,8 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from .auth import models as _auth_models  # noqa: F401  (register User table on Base)
+from .db import Base, engine
 from .models import EncryptRequest, DecryptRequest, EncryptResponse, DecryptResponse
 from .modes import ECBMode, CBCMode, CFBMode, OFBMode, CTRMode
 from .utils.conversions import parse_input, parse_key, bytes_to_hex, bytes_to_text, hex_to_bytes
@@ -35,6 +37,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def _create_tables() -> None:
+    Base.metadata.create_all(bind=engine)
 
 MODE_MAP = {
     "ecb": ECBMode,
