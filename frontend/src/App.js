@@ -4,88 +4,87 @@ import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
 import ModeComparison from './components/ModeComparison';
 import FlowDiagram from './components/FlowDiagram';
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import AuthScreen from './auth/AuthScreen';
+import { encryptLocal, decryptLocal } from './crypto';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+function runLocal({ mode, operation, params }) {
+  if (operation === 'encrypt') {
+    return encryptLocal({
+      mode,
+      plaintext: params.data,
+      key: params.key,
+      inputFormat: params.inputFormat,
+      keyFormat: params.keyFormat,
+      initialCounter: params.initialCounter,
+    });
+  }
+  return decryptLocal({
+    mode,
+    ciphertext: params.data,
+    key: params.key,
+    keyFormat: params.keyFormat,
+    padSize: params.padSize || 0,
+    initialCounter: params.initialCounter,
+  });
+}
 
-function App() {
+function EncryptDecryptPanel() {
   const [mode, setMode] = useState('ecb');
   const [operation, setOperation] = useState('encrypt');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('tool');
-
-  const handleEncrypt = useCallback(async (params) => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    try {
-      const res = await fetch(`${API_BASE}/encrypt`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plaintext: params.data,
-          key: params.key,
-          mode: mode,
-          input_format: params.inputFormat,
-          key_format: params.keyFormat,
-          initial_counter: params.initialCounter,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || 'Encryption failed');
-      }
-      setResult({ type: 'encrypt', ...data });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [mode]);
-
-  const handleDecrypt = useCallback(async (params) => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    try {
-      const res = await fetch(`${API_BASE}/decrypt`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ciphertext: params.data,
-          key: params.key,
-          mode: mode,
-          key_format: params.keyFormat,
-          pad_size: params.padSize || 0,
-          initial_counter: params.initialCounter,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || 'Decryption failed');
-      }
-      setResult({ type: 'decrypt', ...data });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [mode]);
 
   const handleSubmit = useCallback((params) => {
-    if (operation === 'encrypt') {
-      handleEncrypt(params);
-    } else {
-      handleDecrypt(params);
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const data = runLocal({ mode, operation, params });
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  }, [operation, handleEncrypt, handleDecrypt]);
+  }, [mode, operation]);
+
+  return (
+    <>
+      <ModeSelector selectedMode={mode} onModeChange={setMode} />
+      <div className="main-grid">
+        <InputPanel
+          mode={mode}
+          operation={operation}
+          onOperationChange={setOperation}
+          onSubmit={handleSubmit}
+          loading={loading}
+        />
+        <OutputPanel result={result} error={error} loading={loading} />
+      </div>
+      <FlowDiagram mode={mode} result={result} />
+    </>
+  );
+}
+
+function AesApp() {
+  const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('tool');
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AES Encryption Modes</h1>
-        <p>An educational tool for understanding how AES block cipher modes work</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <div style={{ textAlign: 'left' }}>
+            <h1>AES Encryption Modes</h1>
+            <p>An educational tool for understanding how AES block cipher modes work</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
+            <button className="btn-logout" onClick={logout}>Log out</button>
+          </div>
+        </div>
       </header>
 
       <div className="tabs">
@@ -103,30 +102,7 @@ function App() {
         </button>
       </div>
 
-      {activeTab === 'compare' ? (
-        <ModeComparison />
-      ) : (
-        <>
-          <ModeSelector selectedMode={mode} onModeChange={setMode} />
-
-          <div className="main-grid">
-            <InputPanel
-              mode={mode}
-              operation={operation}
-              onOperationChange={setOperation}
-              onSubmit={handleSubmit}
-              loading={loading}
-            />
-            <OutputPanel
-              result={result}
-              error={error}
-              loading={loading}
-            />
-          </div>
-
-          <FlowDiagram mode={mode} result={result} />
-        </>
-      )}
+      {activeTab === 'compare' ? <ModeComparison /> : <EncryptDecryptPanel />}
 
       <div className="disclaimer">
         <strong>Security Disclaimer</strong>
@@ -143,4 +119,22 @@ function App() {
   );
 }
 
-export default App;
+function Gate() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="app">
+        <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Loading...</p>
+      </div>
+    );
+  }
+  return user ? <AesApp /> : <AuthScreen />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
+  );
+}

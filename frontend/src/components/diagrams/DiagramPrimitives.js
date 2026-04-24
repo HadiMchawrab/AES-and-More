@@ -16,7 +16,7 @@ export function Arrow({ x1, y1, x2, y2, active, delay = 0 }) {
   return (
     <line
       x1={x1} y1={y1} x2={x2} y2={y2}
-      stroke={active ? '#00d4ff' : '#4a4a6a'}
+      stroke={active ? '#6366f1' : '#4a4a6a'}
       strokeWidth={active ? 1.8 : 1.2}
       markerEnd={active ? 'url(#arrowhead-active)' : 'url(#arrowhead)'}
       className="flow-arrow"
@@ -32,7 +32,7 @@ export function PolyArrow({ points, active, delay = 0 }) {
     <polyline
       points={pointStr}
       fill="none"
-      stroke={active ? '#00d4ff' : '#4a4a6a'}
+      stroke={active ? '#6366f1' : '#4a4a6a'}
       strokeWidth={active ? 1.8 : 1.2}
       markerEnd={active ? 'url(#arrowhead-active)' : 'url(#arrowhead)'}
       className="flow-arrow"
@@ -118,19 +118,19 @@ export function KeyArrow({ x, y, label = 'K', active, delay = 0 }) {
     <g className={`diagram-node ${active ? 'active' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
       {/* "K" label in a small circle */}
       <circle cx={startX - 10} cy={y} r={9}
-        fill={active ? 'rgba(0,212,255,0.15)' : 'transparent'}
-        stroke={active ? '#00d4ff' : '#4a4a6a'} strokeWidth={1}
+        fill={active ? 'rgba(99,102,241,0.15)' : 'transparent'}
+        stroke={active ? '#6366f1' : '#4a4a6a'} strokeWidth={1}
         style={{ transition: 'all 0.4s ease' }}
       />
       <text x={startX - 10} y={y + 4} textAnchor="middle"
-        fill={active ? '#00d4ff' : '#6c6c80'} fontSize={10} fontStyle="italic" fontWeight={700}
+        fill={active ? '#6366f1' : '#6c6c80'} fontSize={10} fontStyle="italic" fontWeight={700}
         style={{ transition: 'fill 0.4s ease' }}
       >
         {label}
       </text>
       {/* Short arrow from circle to AES box */}
       <line x1={startX - 1} y1={y} x2={x} y2={y}
-        stroke={active ? '#00d4ff' : '#4a4a6a'} strokeWidth={1.2}
+        stroke={active ? '#6366f1' : '#4a4a6a'} strokeWidth={1.2}
         markerEnd={active ? 'url(#arrowhead-active)' : 'url(#arrowhead)'}
         style={{ transition: 'stroke 0.4s ease' }}
       />

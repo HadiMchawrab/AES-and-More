@@ -16,6 +16,12 @@ npm-debug.log*
 .env.local
 .env.*.local
 
+# Local DB + TLS certs
+*.db
+*.sqlite
+*.sqlite3
+backend/certs/
+
 # IDE
 .vscode/
 .idea/

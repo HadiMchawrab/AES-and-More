@@ -20,7 +20,12 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo }) {
   const colW = 260;
   const startX = 80;
   const totalCols = Math.max(displayBlocks.length, 2);
-  const svgW = startX + totalCols * colW + 20;
+  // First-block IV sits at x = (startX + colW/2) - colW + 15 = startX + 15 - colW/2,
+  // which is negative (for startX=80, colW=260 → -35). Extend the viewBox left so
+  // it fits without clipping.
+  const leftPad = colW / 2 - startX + 15; // extra space needed on the left (positive)
+  const viewX = -Math.max(leftPad + 10, 0);
+  const svgW = startX + totalCols * colW + 20 - viewX;
 
   //
   // ─── Encryption Y‑coordinates ────────────────────────────────
@@ -190,7 +195,7 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo }) {
   const renderBlock = isEncrypt ? renderEncryptBlock : renderDecryptBlock;
 
   return (
-    <svg viewBox={`0 0 ${svgW} ${svgH}`} className="flow-diagram-svg"
+    <svg viewBox={`${viewX} 0 ${svgW} ${svgH}`} className="flow-diagram-svg"
       style={{ width: svgW, height: svgH }}>
       <DiagramDefs />
 
@@ -201,7 +206,7 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo }) {
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 
-      <text x={svgW / 2} y={svgH - 5} textAnchor="middle" fill="#6c6c80" fontSize={11}>
+      <text x={viewX + svgW / 2} y={svgH - 5} textAnchor="middle" fill="#6c6c80" fontSize={11}>
         ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Blocks chained via XOR
       </text>
     </svg>

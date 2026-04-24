@@ -75,15 +75,36 @@ function OutputPanel({ result, error, loading }) {
             <CopyButton text={result.ciphertext_hex} />
           </div>
           <div className="value">{result.ciphertext_hex}</div>
+          <div
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.75rem',
+              fontStyle: 'italic',
+              marginTop: '8px',
+              lineHeight: '1.4',
+            }}
+          >
+            AES produces raw binary bytes that aren't valid text. Hex (0-9, a-f)
+            is used so the output is printable and safe to copy.
+          </div>
         </div>
       ) : (
         <>
           <div className="result-box">
             <div className="label">
               Plaintext (Text)
-              <CopyButton text={result.plaintext_text} />
+              {result.plaintext_text !== null && (
+                <CopyButton text={result.plaintext_text} />
+              )}
             </div>
-            <div className="value">{result.plaintext_text}</div>
+            {result.plaintext_text !== null ? (
+              <div className="value">{result.plaintext_text}</div>
+            ) : (
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                Decrypted bytes are not valid UTF-8 text. This usually means the
+                ciphertext, key, or mode is incorrect. See the hex output below.
+              </div>
+            )}
           </div>
           <div className="result-box">
             <div className="label">

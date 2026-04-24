@@ -60,6 +60,16 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
               </button>
             </div>
           )}
+          {isDecrypt && (
+            <>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                0-9, a-f (multiple of 32 hex chars)
+              </span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                {data.length} / hex chars
+              </span>
+            </>
+          )}
         </div>
         <textarea
           value={data}

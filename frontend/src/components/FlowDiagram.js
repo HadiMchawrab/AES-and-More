@@ -13,6 +13,26 @@ const DIAGRAM_MAP = {
   ctr: CTRDiagram,
 };
 
+// Which legend swatches each mode actually renders.
+// ECB/CBC show encrypt OR decrypt AES box depending on direction; CFB/OFB/CTR always show AES encrypt.
+const MODE_LEGEND_KEYS = {
+  ecb: { enc: ['plaintext', 'ciphertext', 'aes-enc'],                      dec: ['plaintext', 'ciphertext', 'aes-dec'] },
+  cbc: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],         dec: ['plaintext', 'ciphertext', 'aes-dec', 'xor', 'iv'] },
+  cfb: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],         dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
+  ofb: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],         dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
+  ctr: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'counter'],    dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'counter'] },
+};
+
+const LEGEND_ITEMS = {
+  'plaintext':  { label: 'Plaintext',    swatch: { background: '#b8d4e3' } },
+  'ciphertext': { label: 'Ciphertext',   swatch: { background: '#d4c8b0' } },
+  'aes-enc':    { label: 'AES Encrypt',  swatch: { background: '#5c8a5c' } },
+  'aes-dec':    { label: 'AES Decrypt',  swatch: { background: '#8a6a5c' } },
+  'xor':        { label: 'XOR',          swatch: { background: '#ffab40', borderRadius: '50%' } },
+  'iv':         { label: 'IV / Feedback', swatch: { background: '#a0d4a0' } },
+  'counter':    { label: 'Counter',      swatch: { background: '#e3d4a0' } },
+};
+
 /**
  * Main FlowDiagram component.
  *
@@ -135,27 +155,15 @@ function FlowDiagram({ mode, result }) {
       </div>
 
       <div className="flow-diagram-legend">
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#b8d4e3' }}></span> Plaintext
-        </div>
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#d4c8b0' }}></span> Ciphertext
-        </div>
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#5c8a5c' }}></span> AES Encrypt
-        </div>
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#8a6a5c' }}></span> AES Decrypt
-        </div>
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#ffab40', borderRadius: '50%' }}></span> XOR
-        </div>
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#a0d4a0' }}></span> IV / Feedback
-        </div>
-        <div className="legend-item">
-          <span className="legend-swatch" style={{ background: '#e3d4a0' }}></span> Counter
-        </div>
+        {(MODE_LEGEND_KEYS[mode]?.[isEncrypt ? 'enc' : 'dec'] || []).map((key) => {
+          const item = LEGEND_ITEMS[key];
+          if (!item) return null;
+          return (
+            <div key={key} className="legend-item">
+              <span className="legend-swatch" style={item.swatch}></span> {item.label}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
