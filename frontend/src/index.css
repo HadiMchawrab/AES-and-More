@@ -584,6 +584,44 @@ select:focus {
   font-size: 0.8rem;
 }
 
+.pw-strength {
+  margin-top: 10px;
+}
+
+.pw-strength-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.pw-strength-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #334155;
+  transition: background 0.15s ease;
+}
+
+.pw-strength-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.pw-strength-checks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  font-size: 0.75rem;
+}
+
+.pw-strength-checks li {
+  font-family: var(--font-mono, monospace);
+}
+
 /* ===== Footer ===== */
 .app-footer {
   text-align: center;

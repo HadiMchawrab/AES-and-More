@@ -1,5 +1,32 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
+
+function scorePassword(pw) {
+  if (!pw) return { score: 0, label: '', checks: [] };
+
+  const checks = [
+    { label: 'At least 8 characters', ok: pw.length >= 8 },
+    { label: 'Lowercase letter', ok: /[a-z]/.test(pw) },
+    { label: 'Uppercase letter', ok: /[A-Z]/.test(pw) },
+    { label: 'Number', ok: /\d/.test(pw) },
+    { label: 'Symbol', ok: /[^A-Za-z0-9]/.test(pw) },
+  ];
+
+  let score = checks.filter((c) => c.ok).length;
+  if (pw.length >= 12 && score >= 4) score = Math.min(score + 1, 5);
+
+  const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'];
+  return { score, label: labels[score], checks };
+}
+
+const strengthColors = [
+  'var(--danger, #ef4444)',
+  'var(--danger, #ef4444)',
+  'var(--warning)',
+  'var(--warning)',
+  'var(--success)',
+  'var(--success)',
+];
 
 export default function AuthScreen() {
   const { login, register } = useAuth();
@@ -9,9 +36,23 @@ export default function AuthScreen() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  const strength = useMemo(
+    () => (tab === 'register' ? scorePassword(password) : null),
+    [password, tab],
+  );
+
+  const MIN_STRENGTH = 3;
+  const tooWeak = tab === 'register' && strength && strength.score < MIN_STRENGTH;
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    if (tooWeak) {
+      setError(
+        'Password is too weak. Meet at least 3 of: length ≥ 8, lowercase, uppercase, number, symbol.',
+      );
+      return;
+    }
     setBusy(true);
     try {
       if (tab === 'login') {
@@ -79,13 +120,55 @@ export default function AuthScreen() {
               required
             />
             {tab === 'register' && (
-              <small className="auth-hint">Minimum 8 characters.</small>
+              <>
+                <small className="auth-hint">Minimum 8 characters.</small>
+                {password && (
+                  <div className="pw-strength">
+                    <div className="pw-strength-bar">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className="pw-strength-seg"
+                          style={{
+                            background:
+                              i < strength.score
+                                ? strengthColors[strength.score]
+                                : 'var(--border, #334155)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div
+                      className="pw-strength-label"
+                      style={{ color: strengthColors[strength.score] }}
+                    >
+                      {strength.label}
+                    </div>
+                    <ul className="pw-strength-checks">
+                      {strength.checks.map((c) => (
+                        <li
+                          key={c.label}
+                          style={{
+                            color: c.ok ? 'var(--success)' : 'var(--text-muted)',
+                          }}
+                        >
+                          {c.ok ? '✓' : '○'} {c.label}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {error && <div className="error-msg">{error}</div>}
 
-          <button type="submit" className="btn btn-encrypt" disabled={busy}>
+          <button
+            type="submit"
+            className="btn btn-encrypt"
+            disabled={busy || tooWeak}
+          >
             {busy ? '...' : tab === 'login' ? 'Log in' : 'Create account'}
           </button>
         </form>
