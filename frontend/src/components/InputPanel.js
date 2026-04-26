@@ -1,26 +1,56 @@
 import React, { useState } from 'react';
+import { bytesToHex } from '../crypto/encode';
+
+function generateRandomKeyHex(sizeBytes) {
+  const bytes = new Uint8Array(sizeBytes);
+  crypto.getRandomValues(bytes);
+  return bytesToHex(bytes);
+}
 
 function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
   const [data, setData] = useState('');
   const [key, setKey] = useState('');
   const [inputFormat, setInputFormat] = useState('text');
   const [keyFormat, setKeyFormat] = useState('text');
+  const [keyMode, setKeyMode] = useState('manual');
+  const [randomKey, setRandomKey] = useState('');
+  const [randomKeySize, setRandomKeySize] = useState(16);
   const [initialCounter, setInitialCounter] = useState(0);
   const [padSize, setPadSize] = useState(0);
 
+  const switchToRandom = (size) => {
+    const newKey = generateRandomKeyHex(size);
+    setRandomKey(newKey);
+  };
+
+  const handleKeyModeChange = (newMode) => {
+    setKeyMode(newMode);
+    if (newMode === 'random') {
+      switchToRandom(randomKeySize);
+    }
+  };
+
+  const handleRandomKeySizeChange = (size) => {
+    setRandomKeySize(size);
+    setRandomKey(generateRandomKeyHex(size));
+  };
+
   const handleSubmit = () => {
-    if (!data.trim() || !key.trim()) return;
+    const activeKey = keyMode === 'random' ? randomKey : key.trim();
+    const activeKeyFormat = keyMode === 'random' ? 'hex' : keyFormat;
+    if (!data.trim() || !activeKey) return;
     onSubmit({
       data: data.trim(),
-      key: key.trim(),
+      key: activeKey,
       inputFormat,
-      keyFormat,
+      keyFormat: activeKeyFormat,
       initialCounter,
       padSize,
     });
   };
 
   const isDecrypt = operation === 'decrypt';
+  const canSubmit = data.trim() && (keyMode === 'random' ? randomKey : key.trim());
 
   return (
     <div className="card">
@@ -89,35 +119,96 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
           <div className="format-toggle">
             <button
-              className={keyFormat === 'text' ? 'active' : ''}
-              onClick={() => setKeyFormat('text')}
+              className={keyMode === 'manual' ? 'active' : ''}
+              onClick={() => handleKeyModeChange('manual')}
             >
-              Text
+              Manual
             </button>
             <button
-              className={keyFormat === 'hex' ? 'active' : ''}
-              onClick={() => setKeyFormat('hex')}
+              className={keyMode === 'random' ? 'active' : ''}
+              onClick={() => handleKeyModeChange('random')}
             >
-              Hex
+              Random
             </button>
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            {keyFormat === 'text' ? '16, 24, or 32 chars' : '32, 48, or 64 hex chars'}
-          </span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-            {key.length} / {keyFormat === 'text' ? 'chars' : 'hex chars'}
-          </span>
+
+          {keyMode === 'manual' && (
+            <>
+              <div className="format-toggle">
+                <button
+                  className={keyFormat === 'text' ? 'active' : ''}
+                  onClick={() => setKeyFormat('text')}
+                >
+                  Text
+                </button>
+                <button
+                  className={keyFormat === 'hex' ? 'active' : ''}
+                  onClick={() => setKeyFormat('hex')}
+                >
+                  Hex
+                </button>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {keyFormat === 'text' ? '16, 24, or 32 chars' : '32, 48, or 64 hex chars'}
+              </span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                {key.length} / {keyFormat === 'text' ? 'chars' : 'hex chars'}
+              </span>
+            </>
+          )}
+
+          {keyMode === 'random' && (
+            <>
+              <div className="format-toggle">
+                <button
+                  className={randomKeySize === 16 ? 'active' : ''}
+                  onClick={() => handleRandomKeySizeChange(16)}
+                >
+                  128-bit
+                </button>
+                <button
+                  className={randomKeySize === 24 ? 'active' : ''}
+                  onClick={() => handleRandomKeySizeChange(24)}
+                >
+                  192-bit
+                </button>
+                <button
+                  className={randomKeySize === 32 ? 'active' : ''}
+                  onClick={() => handleRandomKeySizeChange(32)}
+                >
+                  256-bit
+                </button>
+              </div>
+              <button
+                className="btn-copy"
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setRandomKey(generateRandomKeyHex(randomKeySize))}
+              >
+                ↺ New key
+              </button>
+            </>
+          )}
         </div>
-        <input
-          type="text"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          placeholder={
-            keyFormat === 'hex'
-              ? 'e.g., 0123456789abcdef0123456789abcdef'
-              : 'e.g., mysecretkey12345'
-          }
-        />
+
+        {keyMode === 'manual' ? (
+          <input
+            type="text"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder={
+              keyFormat === 'hex'
+                ? 'e.g., 0123456789abcdef0123456789abcdef'
+                : 'e.g., mysecretkey12345'
+            }
+          />
+        ) : (
+          <input
+            type="text"
+            value={randomKey}
+            readOnly
+            style={{ color: 'var(--text-muted)', cursor: 'default' }}
+          />
+        )}
       </div>
 
       {mode === 'ctr' && (
@@ -151,7 +242,7 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
         <button
           className={`btn ${isDecrypt ? 'btn-decrypt' : 'btn-encrypt'}`}
           onClick={handleSubmit}
-          disabled={loading || !data.trim() || !key.trim()}
+          disabled={loading || !canSubmit}
         >
           {loading ? 'Processing...' : isDecrypt ? 'Decrypt' : 'Encrypt'}
         </button>
