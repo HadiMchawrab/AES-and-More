@@ -331,6 +331,7 @@ export const OFB = {
 export const CTR = {
   encrypt(plaintext, key, initialCounter = 0) {
     const { padded, padSize } = zeroPad(plaintext);
+    //console.log(padded);
     const blocks = splitBlocks(padded);
     const cipherBlocks = [];
     const blockDetails = [];

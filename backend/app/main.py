@@ -9,10 +9,14 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from .auth import models as _auth_models  # noqa: F401  (register User table on Base)
 from .auth.routes import router as auth_router
 from .db import Base, engine
+from .limiter import limiter
 
 app = FastAPI(
     title="AES Modes Educational Tool",
@@ -22,6 +26,10 @@ app = FastAPI(
     ),
     version="2.0.0",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 allowed_origins = [
     origin.strip()

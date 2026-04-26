@@ -1,9 +1,10 @@
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..limiter import limiter
 from .deps import COOKIE_NAME, get_current_user
 from .models import User
 from .schemas import LoginRequest, RegisterRequest, UserOut
@@ -29,7 +30,8 @@ def _set_auth_cookie(response: Response, token: str) -> None:
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def register(req: RegisterRequest, response: Response, db: Session = Depends(get_db)) -> User:
+@limiter.limit("10/hour")
+def register(request: Request, req: RegisterRequest, response: Response, db: Session = Depends(get_db)) -> User:
     existing = db.query(User).filter(User.email == req.email).first()
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
@@ -44,7 +46,8 @@ def register(req: RegisterRequest, response: Response, db: Session = Depends(get
 
 
 @router.post("/login", response_model=UserOut)
-def login(req: LoginRequest, response: Response, db: Session = Depends(get_db)) -> User:
+@limiter.limit("5/minute")
+def login(request: Request, req: LoginRequest, response: Response, db: Session = Depends(get_db)) -> User:
     user = db.query(User).filter(User.email == req.email).first()
     if user is None or not verify_password(req.password, user.password_hash):
         # Generic message — don't leak whether the email exists.

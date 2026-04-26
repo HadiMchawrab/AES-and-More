@@ -60,16 +60,43 @@ export function parseKey(key, format) {
 
 export function zeroPad(data) {
   const remainder = data.length % BLOCK_SIZE;
-  if (remainder === 0) return { padded: data, padSize: 0 };
+
+  if (remainder === 0) {
+    return { padded: data, padSize: 0 };
+  }
+
   const padSize = BLOCK_SIZE - remainder;
   const padded = new Uint8Array(data.length + padSize);
+
   padded.set(data);
-  // remaining bytes default to 0
+
+  // n-1 bytes stay 0x00 by default
+  // last padding byte stores the padding size
+  padded[padded.length - 1] = padSize;
+
   return { padded, padSize };
 }
 
-export function zeroUnpad(data, padSize) {
-  if (padSize === 0) return data;
+export function zeroUnpad(data) {
+  if (data.length === 0) return data;
+
+  const padSize = data[data.length - 1];
+
+  if (padSize === 0) {
+    return data;
+  }
+
+  if (padSize < 0 || padSize > BLOCK_SIZE || padSize > data.length) {
+    throw new Error('Invalid padding size');
+  }
+
+  // Check that the previous padding bytes are actually zero
+  for (let i = data.length - padSize; i < data.length - 1; i++) {
+    if (data[i] !== 0) {
+      throw new Error('Invalid zero padding');
+    }
+  }
+
   return data.slice(0, data.length - padSize);
 }
 
