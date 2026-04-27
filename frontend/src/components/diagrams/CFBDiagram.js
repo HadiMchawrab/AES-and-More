@@ -2,19 +2,17 @@ import React from 'react';
 import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } from './DiagramPrimitives';
 
 /**
- * CFB Mode Flow Diagram
+ * CFB mode flow diagram.
  *
  * Encryption:
- *   IV/C[i-1]          (feedback input)
- *       ↓
- *  K → [Encrypt]       (AES encrypt the feedback)
- *       ↓ keystream
- *      [XOR] ← P[i]   (XOR keystream with plaintext)
- *       ↓
- *      C[i] ─────→     (output feeds back to next block)
+ *   IV / C[i-1] -> Encrypt -> keystream
+ *   P[i] XOR keystream -> C[i]
+ *   C[i] feeds the next block
  *
- * Decryption: same structure, but input to XOR is C[i], output is P[i],
- * and feedback comes from the ciphertext input (C[i]).
+ * Decryption:
+ *   IV / C[i-1] -> Encrypt -> keystream
+ *   C[i] XOR keystream -> P[i]
+ *   The ciphertext input also feeds the next block's feedback input.
  */
 function CFBDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
@@ -24,42 +22,28 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick
   const svgW = startX + totalCols * colW + 20;
   const svgH = 300;
 
-  // Y positions (with proper spacing between elements)
   const Y = {
-    fbY: 10,      // Feedback box top
-    fbBot: 46,    // Feedback box bottom
-    aesY: 62,     // AES box top          (16px gap from fb)
-    aesBot: 106,  // AES box bottom
-    keyY: 84,     // Key arrow Y (center of AES)
-    ksLabel: 120, // Keystream label Y
-    xorY: 140,    // XOR circle center    (20px gap below AES + 14 radius)
-    dataY: 122,   // Data input box top
-    outY: 172,    // Output box top       (18px gap below XOR)
-    outBot: 208,  // Output box bottom
+    fbY: 10,
+    fbBot: 46,
+    aesY: 62,
+    aesBot: 106,
+    keyY: 84,
+    xorY: 140,
+    dataY: 122,
+    outY: 172,
   };
 
-  function renderBlock(block, i, cx, active, d, total) {
-    const feedbackLabel = i === 0 ? 'IV' : (isEncrypt ? `C${i}` : `C${i}`);
-    const feedbackValue = block.feedback_input;
-    const dataLabel = isEncrypt ? `P${i + 1}` : `C${i + 1}`;
-    const dataValue = block.input;
-    const outLabel = isEncrypt ? `C${i + 1}` : `P${i + 1}`;
-    const outValue = block.output;
-
+  function renderEncryptBlock(block, i, cx, active, d, total) {
     return (
-      <g key={i}>
-        {/* Feedback input (IV or previous ciphertext) */}
-        <DataBox x={cx - 55} y={Y.fbY} w={110} label={feedbackLabel}
-          value={feedbackValue} color="#a0d4a0" active={active} delay={d} />
+      <g key={`enc-${i}`}>
+        <DataBox x={cx - 55} y={Y.fbY} w={110} label={i === 0 ? 'IV' : `C${i}`}
+          value={block.feedback_input} color="#a0d4a0" active={active} delay={d} />
 
-        {/* Arrow: feedback down to AES */}
         <Arrow x1={cx} y1={Y.fbBot} x2={cx} y2={Y.aesY}
           active={active} delay={d + 50} />
 
-        {/* Key arrow */}
         <KeyArrow x={cx - 50} y={Y.keyY} active={active} delay={d + 80} />
 
-        {/* AES Encrypt (always encrypt, even for decryption) */}
         <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100}
           onClick={onAesClick && (() => onAesClick({
             input: block.feedback_input,
@@ -67,58 +51,93 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick
             label: `CFB · Block ${i + 1} · Encrypting feedback (${i === 0 ? 'IV' : `C${i}`})`,
           }))} />
 
-        {/* Arrow: AES down to XOR (keystream) */}
         <Arrow x1={cx} y1={Y.aesBot} x2={cx} y2={Y.xorY - 12}
           active={active} delay={d + 150} />
 
-        {/* XOR circle */}
         <XORCircle cx={cx} cy={Y.xorY} active={active} delay={d + 180} />
 
-        {/* Data input from left into XOR */}
-        <DataBox x={cx - colW + 45} y={Y.dataY} w={90} h={36} label={dataLabel}
-          value={dataValue} color={isEncrypt ? '#b8d4e3' : '#c8b8d4'}
-          active={active} delay={d + 50} />
+        <DataBox x={cx - colW + 45} y={Y.dataY} w={90} h={36} label={`P${i + 1}`}
+          value={block.input} color="#b8d4e3" active={active} delay={d + 50} />
         <Arrow x1={cx - colW + 135} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
           active={active} delay={d + 160} />
 
-        {/* Arrow: XOR down to output */}
         <Arrow x1={cx} y1={Y.xorY + 12} x2={cx} y2={Y.outY}
           active={active} delay={d + 220} />
 
-        {/* Output */}
-        <DataBox x={cx - 55} y={Y.outY} w={110} label={outLabel}
-          value={outValue} color={isEncrypt ? '#d4c8b0' : '#b0d4b8'}
-          active={active} delay={d + 260} />
+        <DataBox x={cx - 55} y={Y.outY} w={110} label={`C${i + 1}`}
+          value={block.output} color="#d4c8b0" active={active} delay={d + 260} />
 
-        {/* Feedback arrow to next block — lights up after current block, before next */}
         {i < total - 1 && (
-          isEncrypt ? (
-            // Encryption: C output feeds back → route right and up to next feedback input
-            <PolyArrow
-              points={[
-                [cx + 55, Y.outY + 18],            // Right edge of output
-                [cx + colW / 2 + 25, Y.outY + 18], // Midpoint right
-                [cx + colW / 2 + 25, Y.fbY + 18],  // Up to feedback level
-                [cx + colW - 55, Y.fbY + 18],       // Into next feedback box
-              ]}
-              active={i <= connectorUpTo} delay={0}
-            />
-          ) : (
-            // Decryption: C input feeds to next feedback
-            <PolyArrow
-              points={[
-                [cx - colW + 140, Y.dataY + 4],     // Right of data box
-                [cx + colW / 2 + 25, Y.dataY + 4],  // Route right
-                [cx + colW / 2 + 25, Y.fbY + 18],   // Up to feedback level
-                [cx + colW - 55, Y.fbY + 18],        // Into next feedback
-              ]}
-              active={i <= connectorUpTo} delay={0}
-            />
-          )
+          <PolyArrow
+            points={[
+              [cx + 55, Y.outY + 18],
+              [cx + colW / 2 + 25, Y.outY + 18],
+              [cx + colW / 2 + 25, Y.fbY + 18],
+              [cx + colW - 55, Y.fbY + 18],
+            ]}
+            active={i <= connectorUpTo} delay={0}
+          />
         )}
       </g>
     );
   }
+
+  function renderDecryptBlock(block, i, cx, active, d, total) {
+    const dataBoxX = cx + 45;
+    const dataBoxLeft = dataBoxX;
+    const dataBoxRight = dataBoxX + 90;
+    const branchX = dataBoxRight + 24;
+    const feedbackLaneY = Y.dataY + 18;
+
+    return (
+      <g key={`dec-${i}`}>
+        <DataBox x={cx - 55} y={Y.fbY} w={110} label={i === 0 ? 'IV' : `C${i}`}
+          value={block.feedback_input} color="#a0d4a0" active={active} delay={d} />
+
+        <Arrow x1={cx} y1={Y.fbBot} x2={cx} y2={Y.aesY}
+          active={active} delay={d + 50} />
+
+        <KeyArrow x={cx - 50} y={Y.keyY} active={active} delay={d + 80} />
+
+        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100}
+          onClick={onAesClick && (() => onAesClick({
+            input: block.feedback_input,
+            isEncrypt: true,
+            label: `CFB · Block ${i + 1} · Encrypting feedback (${i === 0 ? 'IV' : `C${i}`})`,
+          }))} />
+
+        <Arrow x1={cx} y1={Y.aesBot} x2={cx} y2={Y.xorY - 12}
+          active={active} delay={d + 150} />
+
+        <XORCircle cx={cx} cy={Y.xorY} active={active} delay={d + 180} />
+
+        <DataBox x={dataBoxX} y={Y.dataY} w={90} h={36} label={`C${i + 1}`}
+          value={block.input} color="#c8b8d4" active={active} delay={d + 50} />
+        <Arrow x1={dataBoxLeft} y1={Y.xorY} x2={cx + 12} y2={Y.xorY}
+          active={active} delay={d + 160} />
+
+        <Arrow x1={cx} y1={Y.xorY + 12} x2={cx} y2={Y.outY}
+          active={active} delay={d + 220} />
+
+        <DataBox x={cx - 55} y={Y.outY} w={110} label={`P${i + 1}`}
+          value={block.output} color="#b0d4b8" active={active} delay={d + 260} />
+
+        {i < total - 1 && (
+          <PolyArrow
+            points={[
+              [dataBoxRight, feedbackLaneY],
+              [branchX, feedbackLaneY],
+              [branchX, Y.fbY + 18],
+              [cx + colW - 55, Y.fbY + 18],
+            ]}
+            active={i <= connectorUpTo} delay={0}
+          />
+        )}
+      </g>
+    );
+  }
+
+  const renderBlock = isEncrypt ? renderEncryptBlock : renderDecryptBlock;
 
   return (
     <svg viewBox={`0 0 ${svgW} ${svgH}`} className="flow-diagram-svg"
@@ -128,10 +147,8 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick
       {displayBlocks.map((block, i) => {
         const cx = startX + i * colW + colW / 2;
         const active = i <= animatedUpTo;
-        const d = 0;
-        return renderBlock(block, i, cx, active, d, displayBlocks.length);
+        return renderBlock(block, i, cx, active, 0, displayBlocks.length);
       })}
-
     </svg>
   );
 }
