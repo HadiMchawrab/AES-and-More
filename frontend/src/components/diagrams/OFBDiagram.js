@@ -20,7 +20,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
 function OFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
   const displayBlocks = blocks || [];
   const colW = 260;
-  const startX = 70;
+  const startX = 130;
   const totalCols = Math.max(displayBlocks.length, 2);
   const svgW = startX + totalCols * colW + 20;
   const svgH = 320;

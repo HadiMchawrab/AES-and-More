@@ -66,22 +66,14 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <Arrow x1={cx} y1={Y.aesBot} x2={cx} y2={Y.xorY - 12}
           active={active} delay={d + 150} />
 
-        {/* Keystream label */}
-        {active && (
-          <text x={cx + 10} y={Y.ksLabel} fill="#ffab40" fontSize={8}
-            fontFamily="'Consolas', monospace">
-            keystream
-          </text>
-        )}
-
         {/* XOR circle */}
         <XORCircle cx={cx} cy={Y.xorY} active={active} delay={d + 180} />
 
         {/* Data input from left into XOR */}
-        <DataBox x={cx - colW + 35} y={Y.dataY} w={90} h={36} label={dataLabel}
+        <DataBox x={cx - colW + 45} y={Y.dataY} w={90} h={36} label={dataLabel}
           value={dataValue} color={isEncrypt ? '#b8d4e3' : '#c8b8d4'}
           active={active} delay={d + 50} />
-        <Arrow x1={cx - colW + 125} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
+        <Arrow x1={cx - colW + 135} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
           active={active} delay={d + 160} />
 
         {/* Arrow: XOR down to output */}
@@ -112,7 +104,7 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
             // In CFB decrypt, feedback = ciphertext input, which is block.input
             <PolyArrow
               points={[
-                [cx - colW + 125, Y.dataY + 4],     // Right of data box
+                [cx - colW + 140, Y.dataY + 4],     // Right of data box
                 [cx + colW / 2 + 25, Y.dataY + 4],  // Route right
                 [cx + colW / 2 + 25, Y.fbY + 18],   // Up to feedback level
                 [cx + colW - 55, Y.fbY + 18],        // Into next feedback

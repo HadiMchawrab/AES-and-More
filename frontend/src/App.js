@@ -52,7 +52,7 @@ function EncryptDecryptPanel() {
 
   return (
     <>
-      <ModeSelector selectedMode={mode} onModeChange={setMode} />
+      <ModeSelector selectedMode={mode} onModeChange={(m) => { setMode(m); setResult(null); setError(null); }} />
       <div className="main-grid">
         <InputPanel
           mode={mode}
