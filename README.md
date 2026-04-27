@@ -1,19 +1,101 @@
 # AES Encryption Modes — Educational Tool
 
-A full-stack web application for learning how AES block cipher modes of operation work. Visualize block-by-block processing, XOR operations, and the differences between ECB, CBC, CFB, OFB, and CTR modes.
+A web application for learning how AES block cipher modes of operation work.
+Encrypt and decrypt data with ECB, CBC, CFB, OFB, and CTR, then watch each
+block flow through the cipher with animated diagrams populated by the real hex
+values from your run.
+
+All cryptography runs **client-side in the browser** — the backend only handles
+user accounts (register / login / session). No plaintext or ciphertext ever
+leaves your machine.
 
 ## Features
 
-- **5 AES modes**: ECB, CBC, CFB, OFB, CTR — all implemented from scratch
-- **Animated flow diagrams**: SVG diagrams matching textbook-style mode illustrations, populated with real hex values from your encryption/decryption and animated block-by-block with play/pause/step controls
-- **Block-by-block detail view**: Expandable per-block breakdown showing inputs, outputs, XOR operands, keystreams, and counters
-- **Encrypt & Decrypt**: Full round-trip with padding tracking
-- **Mode comparison table**: Side-by-side feature comparison with explanations
-- **Text/Hex input toggle**: Enter data as text or raw hex
-- **User-defined counter**: Set CTR mode's initial counter value
-- **Copy buttons**: One-click copy of results
-- **Responsive dark theme UI**: Works on desktop and mobile, optimized for reading hex data
-- **Dockerized**: Production-ready with nginx reverse proxy
+- **5 AES modes**: ECB, CBC, CFB, OFB, CTR
+- **AES-128 / 192 / 256**: pure-JavaScript AES core implemented from the FIPS 197 specification (S-box, key expansion, ShiftRows, MixColumns, etc.). No `crypto.subtle`, no PyCryptodome, no library AES — every step is visible in the source.
+- **Mode implementations from scratch**: each mode is wired up in `modes.js` following NIST SP 800-38A.
+- **Animated flow diagrams** (SVG) with play / pause / step / reset, for both encryption and decryption.
+- **AES Internals drill-down**: click any **Encrypt** or **Decrypt** box in a diagram to open a modal that walks through the round-by-round transformations on the 4×4 state — AddRoundKey, SubBytes, ShiftRows, MixColumns (and inverses for decryption) — using the actual block input and key from your run, with changed cells highlighted between Before/After grids and the round key shown when relevant.
+- **Block-by-block detail view**: per-block inputs, XOR operands, keystreams, counters, and outputs.
+- **Random key generator** with 128 / 192 / 256-bit options, plus manual key entry as text or hex.
+- **Password strength meter** on signup with live feedback against length, casing, digit, and symbol checks.
+- **User authentication**: register / log in / log out, JWT cookie sessions, passwords hashed with bcrypt, server-side rate limiting.
+- **Responsive dark UI** optimised for reading hex.
+
+## Project Structure
+
+```
+AES-and-More/
+├── docker-compose.yml          # Local dev: frontend + backend
+├── render.yaml                 # Production deploy config (Render.com)
+├── README.md
+│
+├── backend/                    # FastAPI auth backend (no crypto here)
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app/
+│       ├── main.py             # FastAPI app, CORS, startup table creation
+│       ├── db.py               # SQLAlchemy engine (Postgres / SQLite fallback)
+│       ├── limiter.py          # Rate-limiting setup
+│       └── auth/
+│           ├── routes.py       # /auth/register, /auth/login, /auth/logout, /auth/me
+│           ├── models.py       # User SQLAlchemy model
+│           ├── schemas.py      # Pydantic request/response shapes
+│           ├── security.py     # JWT signing/verification, bcrypt hashing
+│           └── deps.py         # FastAPI auth dependencies
+│
+├── frontend/                   # React app — all crypto runs here
+│   ├── Dockerfile              # Multi-stage: CRA build → nginx
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── public/index.html
+│   └── src/
+│       ├── App.js
+│       ├── api.js              # Backend fetch wrapper
+│       ├── index.js
+│       ├── index.css           # Dark theme, responsive styles
+│       │
+│       ├── crypto/             # ★ AES + modes implementation (client-side)
+│       │   ├── aes.js          # Pure-JS AES-128/192/256 (FIPS 197)
+│       │   ├── aes-trace.js    # Instrumented AES — captures every round transition for the internals modal
+│       │   ├── modes.js        # ECB / CBC / CFB / OFB / CTR (NIST SP 800-38A)
+│       │   ├── encode.js       # Hex/text encoding, padding, block helpers
+│       │   └── index.js        # encryptLocal / decryptLocal entry points
+│       │
+│       ├── auth/
+│       │   ├── AuthContext.js  # React context + register/login/logout flow
+│       │   └── AuthScreen.js   # Sign-in / sign-up form with strength meter
+│       │
+│       └── components/
+│           ├── ModeSelector.js
+│           ├── InputPanel.js          # Plaintext/key inputs, random key, format toggles
+│           ├── OutputPanel.js         # Ciphertext/plaintext output, padding, mode info
+│           ├── BlockVisualization.js  # Per-block expandable detail
+│           ├── ModeComparison.js      # Mode comparison table
+│           ├── FlowDiagram.js         # Animation controller + legend
+│           ├── AesInternalsModal.js   # Round-by-round AES drill-down (4×4 state grid + inverses)
+│           └── diagrams/
+│               ├── DiagramPrimitives.js
+│               ├── ECBDiagram.js
+│               ├── CBCDiagram.js
+│               ├── CFBDiagram.js
+│               ├── OFBDiagram.js
+│               └── CTRDiagram.js
+│
+├── ImageModels/                # Reference textbook diagrams used as visual guides
+│   ├── ecb_mode.png
+│   ├── cbc_mode.png
+│   ├── cfb_mode.png
+│   ├── ofb_mode.png
+│   └── ctr_mode.png
+│
+└── docs/
+    ├── architecture.md
+    ├── aes_modes.md
+    ├── api.md
+    ├── implementation.md
+    └── sources.md              # ★ Citations and attribution
+```
 
 ## Quick Start (Docker)
 
@@ -21,10 +103,7 @@ A full-stack web application for learning how AES block cipher modes of operatio
 docker compose up --build
 ```
 
-Then open **http://localhost:3000** in your browser.
-
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:3000/api` (proxied) or `http://localhost:8000` (direct)
+Open **http://localhost:3000**.
 
 ## Quick Start (Local Development)
 
@@ -33,10 +112,13 @@ Then open **http://localhost:3000** in your browser.
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate    # On Windows: venv\Scripts\activate
+source venv/bin/activate    # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
+
+Set `DATABASE_URL`, `JWT_SECRET`, and `ALLOWED_ORIGINS` in `backend/.env`
+(see "Environment variables" below).
 
 ### Frontend
 
@@ -46,116 +128,78 @@ npm install
 npm start
 ```
 
-The frontend runs on `http://localhost:3000` and expects the backend at `http://localhost:8000`.
+Frontend runs at `http://localhost:3000` and expects the backend at
+`http://localhost:8000` (override with `REACT_APP_API_URL`).
 
-## Project Structure
+## Backend API
 
-```
-AES-and-More/
-├── docker-compose.yml          # Orchestrates frontend + backend
-├── README.md
-│
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── app/
-│       ├── main.py             # FastAPI app & endpoints
-│       ├── models.py           # Request/response schemas
-│       ├── modes/
-│       │   ├── ecb.py          # Electronic Codebook
-│       │   ├── cbc.py          # Cipher Block Chaining
-│       │   ├── cfb.py          # Cipher Feedback
-│       │   ├── ofb.py          # Output Feedback
-│       │   └── ctr.py          # Counter
-│       └── utils/
-│           ├── aes_core.py     # Raw AES + XOR primitives
-│           ├── conversions.py  # Text/hex parsing
-│           └── padding.py      # Zero-padding
-│
-├── frontend/
-│   ├── Dockerfile              # Multi-stage: build + nginx
-│   ├── nginx.conf              # Reverse proxy config
-│   ├── package.json
-│   ├── public/index.html
-│   └── src/
-│       ├── App.js              # Main app component
-│       ├── index.js
-│       ├── index.css           # Dark theme + responsive styles
-│       └── components/
-│           ├── ModeSelector.js
-│           ├── InputPanel.js
-│           ├── OutputPanel.js
-│           ├── BlockVisualization.js
-│           ├── ModeComparison.js
-│           ├── FlowDiagram.js         # Animation controller + legend
-│           └── diagrams/
-│               ├── DiagramPrimitives.js  # Shared SVG building blocks
-│               ├── ECBDiagram.js
-│               ├── CBCDiagram.js
-│               ├── CFBDiagram.js
-│               ├── OFBDiagram.js
-│               └── CTRDiagram.js
-│
-├── ImageModels/                # Reference diagrams for each mode
-│   ├── ecb_mode.png
-│   ├── cbc_mode.png
-│   ├── cfb_mode.png
-│   ├── ofb_mode.png
-│   └── ctr_mode.png
-│
-└── docs/
-    ├── architecture.md         # System design
-    ├── aes_modes.md            # Mode explanations
-    ├── api.md                  # API reference
-    ├── implementation.md       # How modes are coded
-    └── sources.md              # All references & attribution
-```
+The backend only handles authentication. All AES work is client-side.
 
-## API Endpoints
+| Method | Path             | Description                       |
+|--------|------------------|-----------------------------------|
+| `GET`  | `/`              | Health check                      |
+| `POST` | `/auth/register` | Create a new user account         |
+| `POST` | `/auth/login`    | Authenticate, sets a session cookie |
+| `POST` | `/auth/logout`   | Clear the session cookie          |
+| `GET`  | `/auth/me`       | Current user (via session cookie) |
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/` | Health check |
-| `GET` | `/modes` | List all modes with descriptions |
-| `GET` | `/modes/{mode}` | Details for a specific mode |
-| `POST` | `/encrypt` | Encrypt plaintext |
-| `POST` | `/decrypt` | Decrypt ciphertext |
+## Environment variables
 
-See [docs/api.md](docs/api.md) for full API documentation.
+### Backend (`backend/.env` locally, Render env vars in prod)
 
-## Usage Example
+| Variable           | Purpose                                                          |
+|--------------------|------------------------------------------------------------------|
+| `DATABASE_URL`     | Postgres connection string (falls back to local SQLite if unset) |
+| `JWT_SECRET`       | Secret key for signing session JWTs (generate a strong random)   |
+| `ALLOWED_ORIGINS`  | Comma-separated list of allowed CORS origins                     |
+| `COOKIE_SECURE`    | `true` in prod (HTTPS-only cookies), `false` locally             |
+| `COOKIE_SAMESITE`  | `none` cross-site in prod, `lax` locally                         |
+| `PG_SSLMODE`       | Defaults to `require` for Postgres                               |
+| `PG_SSL_ROOT_CERT` | Optional CA cert path for `verify-full` SSL                      |
 
-1. Select a mode (e.g., CBC)
-2. Enter plaintext: `Hello, World!`
-3. Enter a 16-character key: `mysecretkey12345`
-4. Click **Encrypt**
-5. View the ciphertext, padding info, and block-by-block XOR visualization
-6. Scroll down to the **flow diagram** — click Play to watch the encryption animate block-by-block with real hex values
-7. Switch to Decrypt, paste the ciphertext and pad size, click **Decrypt**
+### Frontend
 
-## Security Disclaimer
+| Variable              | Purpose                                          |
+|-----------------------|--------------------------------------------------|
+| `REACT_APP_API_URL`   | Backend base URL (baked in at build time)        |
 
-**This tool is for EDUCATIONAL PURPOSES ONLY.**
+## Usage
 
-- Uses a **zero IV** (`0x00...00`) which is insecure in real systems
-- No authentication, rate limiting, or HTTPS enforcement
-- Do not use this for actual data protection
+1. Register / log in.
+2. Pick a mode (ECB / CBC / CFB / OFB / CTR).
+3. Enter plaintext, choose a 16/24/32-byte key (or generate a random one).
+4. Click **Encrypt** — the ciphertext appears in hex.
+5. Scroll down to the flow diagram and hit **Play** to see each block move through the cipher.
+6. Click any **Encrypt** or **Decrypt** box in the diagram to drill into the AES internals for that block — round-by-round state transitions on the 4×4 matrix.
+7. Switch to **Decrypt**, paste the ciphertext (hex), and verify the round-trip.
 
-In production cryptographic systems:
-- Always use a cryptographically random IV/nonce for each encryption
-- Use authenticated encryption (e.g., AES-GCM)
-- Use a proper key derivation function (e.g., Argon2, PBKDF2)
+## Security disclaimer
 
-## Tech Stack
+**Educational use only.** This project demonstrates how AES modes work
+internally; do not use it to protect real data.
 
-- **Backend**: Python 3.12, FastAPI, PyCryptodome, Uvicorn
-- **Frontend**: React 18, Create React App, custom CSS (no framework)
-- **Infrastructure**: Docker, Docker Compose, nginx
+- Uses an **all-zero IV** for chaining modes — insecure in real systems.
+- No authenticated encryption (no GCM / no MAC).
+- The user-account layer is intentionally minimal.
+
+In production cryptosystems:
+
+- Use a fresh, cryptographically random IV/nonce per encryption.
+- Use authenticated encryption such as AES-GCM.
+- Derive keys with a proper KDF (Argon2 / PBKDF2 / scrypt).
+
+## Tech stack
+
+- **Frontend**: React 18, Create React App, custom CSS
+- **Crypto**: pure-JavaScript AES (FIPS 197) and modes (NIST SP 800-38A), implemented in [`frontend/src/crypto/`](frontend/src/crypto/)
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy, bcrypt, PyJWT
+- **Database**: PostgreSQL (production) / SQLite (local fallback)
+- **Infrastructure**: Docker, Docker Compose, nginx, Render.com (production)
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) — System design and data flow
-- [AES Modes](docs/aes_modes.md) — How each mode works
-- [API Reference](docs/api.md) — Endpoint documentation
-- [Implementation](docs/implementation.md) — Code walkthrough
-- [Sources](docs/sources.md) — Libraries, references, and attribution
+- [Architecture](docs/architecture.md) — system design and data flow
+- [AES Modes](docs/aes_modes.md) — how each mode works
+- [API Reference](docs/api.md) — endpoint documentation
+- [Implementation](docs/implementation.md) — code walkthrough
+- [**Sources & attribution**](docs/sources.md) — every reference used to build this project

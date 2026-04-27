@@ -51,18 +51,18 @@ export function DataBox({ x, y, w = 120, h = 36, label, value, color = '#b8d4e3'
         fill={fill} stroke={active ? color : '#4a4a6a'} strokeWidth={1.5}
         style={{ transition: 'all 0.4s ease' }}
       />
-      <text x={x + w / 2} y={y + 13} textAnchor="middle"
-        fill={textColor} fontSize={9} fontWeight={600}
+      <text x={x + w / 2} y={y + 14} textAnchor="middle"
+        fill={textColor} fontSize={10} fontWeight={600}
         style={{ transition: 'fill 0.4s ease' }}
       >
         {label}
       </text>
-      <text x={x + w / 2} y={y + 27} textAnchor="middle"
-        fill={active ? '#1a1a2e' : '#4a4a6a'} fontSize={8}
+      <text x={x + w / 2} y={y + 28} textAnchor="middle"
+        fill={active ? '#1a1a2e' : '#4a4a6a'} fontSize={10}
         fontFamily="'Consolas', monospace"
         style={{ transition: 'fill 0.4s ease' }}
       >
-        {value ? truncHex(value, 12) : ''}
+        {value ? truncHex(value, 10) : ''}
       </text>
     </g>
   );

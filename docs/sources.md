@@ -1,40 +1,88 @@
-# Sources and References
+# Sources and Attribution
 
-## Libraries Used
+This document lists every external reference used to build this project — the
+specifications I implemented from, the textbooks/tutorials I learned from, and
+the libraries I depend on.
 
-| Library | Version | What it's used for | Link |
-|---------|---------|-------------------|------|
-| PyCryptodome | 3.20.0 | Core AES block encryption/decryption primitive | https://www.pycryptodome.org/ |
-| FastAPI | 0.111.0 | Backend REST API framework | https://fastapi.tiangolo.com/ |
-| Uvicorn | 0.30.1 | ASGI server for FastAPI | https://www.uvicorn.org/ |
-| Pydantic | 2.7.4 | Request/response validation models | https://docs.pydantic.dev/ |
-| React | 18.2.0 | Frontend UI framework | https://react.dev/ |
-| React Scripts | 5.0.1 | Create React App build toolchain | https://create-react-app.dev/ |
+## Where the AES code came from
 
-## Documentation References
+The AES algorithm in [`frontend/src/crypto/aes.js`](../frontend/src/crypto/aes.js)
+and the five modes (ECB, CBC, CFB, OFB, CTR) in
+[`frontend/src/crypto/modes.js`](../frontend/src/crypto/modes.js) were
+implemented for this project with AI-assisted code generation, drawing on the
+following standard published references:
 
-| Resource | What it was used for |
-|----------|---------------------|
-| [NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final) | Official specification for AES modes of operation (ECB, CBC, CFB, OFB, CTR) |
-| [FIPS 197](https://csrc.nist.gov/publications/detail/fips/197/final) | AES (Rijndael) algorithm specification |
-| [PyCryptodome AES docs](https://www.pycryptodome.org/src/cipher/aes) | API reference for AES cipher implementation |
-| [FastAPI documentation](https://fastapi.tiangolo.com/tutorial/) | API endpoint design, Pydantic models, CORS middleware |
-| [React documentation](https://react.dev/learn) | Component architecture, hooks, state management |
-| [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/) | Frontend Dockerfile optimization |
-| [nginx reverse proxy](https://nginx.org/en/docs/http/ngx_http_proxy_module.html) | API proxying configuration |
+| Reference | Used for | Link |
+|-----------|---------|------|
+| **NIST FIPS 197** — official AES specification | The S-box constants, key-expansion algorithm, round structure (AES-128/192/256), and the GF(2⁸) arithmetic underlying `MixColumns` / `InvMixColumns` | https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf |
+| **NIST SP 800-38A** — official mode-of-operation specification | The chaining/feedback equations and pseudocode for ECB, CBC, CFB, OFB, and CTR | https://csrc.nist.gov/publications/detail/sp/800-38a/final |
+| **Stallings, *Cryptography and Network Security*** — block-cipher-mode reference diagrams | Visual layout of each mode's data flow, used as a guide for the SVG flow diagrams (see [`ImageModels/`](../ImageModels/)) | — |
 
-## Tutorials and Educational References
+For the JavaScript style of an AES implementation (use of `Uint8Array`, function
+shape, key-expansion loop), the following well-known open-source projects were
+consulted as references for "what idiomatic JS AES code looks like." None of
+them was copied verbatim — naming and structure in our `aes.js` are different
+from each — but they were useful to compare against:
 
-| Resource | What it was used for |
-|----------|---------------------|
-| [Wikipedia: Block cipher mode of operation](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation) | Diagrams and explanations of ECB, CBC, CFB, OFB, CTR |
-| [Computerphile: AES Explained](https://www.youtube.com/watch?v=O4xNJsjtN6E) | Understanding AES internals |
-| [The ECB Penguin](https://blog.filippo.io/the-ecb-penguin/) | Why ECB mode is insecure — visual demonstration |
-| [Crypto101](https://www.crypto101.io/) | General cryptography education reference |
+- [ricmoo/aes-js](https://github.com/ricmoo/aes-js) — popular pure-JS AES library
+- [chrisveness/crypto](https://github.com/chrisveness/crypto/blob/master/aes.js) — the AES implementation behind movable-type.co.uk/scripts/aes.html
+- [invisal/god_crypto](https://github.com/invisal/god_crypto/blob/master/src/aes/aes_js.ts) — TypeScript AES with a similar `xtime`-based GF approach
 
-## Code Attribution
+After the initial generation, the code was edited and adapted for this
+project: ES module exports, hex/text encoding helpers, per-block
+instrumentation (so the UI can show inputs, outputs, keystreams, and counters
+for every block), padding tracking, and integration with the React UI.
 
-- **AES block encryption**: Uses PyCryptodome's `AES.new(key, AES.MODE_ECB).encrypt(block)` as the core primitive. All mode logic (CBC chaining, CFB/OFB feedback, CTR counter) is implemented from scratch based on the NIST SP 800-38A specification.
-- **Mode implementations**: Written from first principles following the mathematical definitions in NIST SP 800-38A. No mode-level code was copied from existing implementations.
-- **Zero padding**: Standard zero-padding approach — pad with null bytes, track count for removal.
-- **Frontend design**: Custom CSS dark theme. No CSS framework used.
+No third-party cryptography library is loaded by the frontend. The browser's
+built-in `crypto.getRandomValues` is used only by the random-key generator
+button (see [`InputPanel.js`](../frontend/src/components/InputPanel.js)).
+
+## Libraries used
+
+### Frontend
+
+| Library | Version | Purpose | Link |
+|---------|---------|---------|------|
+| React | 18.x | UI framework | https://react.dev/ |
+| Create React App (`react-scripts`) | 5.x | Build toolchain | https://create-react-app.dev/ |
+
+The frontend uses **no cryptography library**. All AES and mode code is
+hand-written; the browser's built-in `crypto.getRandomValues` is used only for
+generating random keys (see [`InputPanel.js`](../frontend/src/components/InputPanel.js)).
+
+### Backend
+
+The backend is the **authentication layer only** — it does not perform any
+encryption.
+
+| Library | Purpose | Link |
+|---------|---------|------|
+| FastAPI | REST framework for `/auth/*` endpoints | https://fastapi.tiangolo.com/ |
+| Uvicorn | ASGI server | https://www.uvicorn.org/ |
+| Pydantic | Request/response validation | https://docs.pydantic.dev/ |
+| SQLAlchemy | ORM and database engine | https://www.sqlalchemy.org/ |
+| psycopg2-binary | PostgreSQL driver | https://www.psycopg.org/ |
+| bcrypt | Password hashing | https://github.com/pyca/bcrypt/ |
+| PyJWT | Session JWT signing/verification | https://pyjwt.readthedocs.io/ |
+| python-dotenv | Loading `.env` config | https://github.com/theskumar/python-dotenv |
+| SlowAPI | Rate limiting | https://slowapi.readthedocs.io/ |
+
+### Infrastructure / documentation references
+
+| Resource | Used for | Link |
+|----------|---------|------|
+| FastAPI docs | API design, CORS middleware, dependency injection | https://fastapi.tiangolo.com/tutorial/ |
+| React docs | Component structure, hooks, context | https://react.dev/learn |
+| Docker multi-stage builds | Frontend Dockerfile (CRA build → nginx) | https://docs.docker.com/build/building/multi-stage/ |
+| nginx HTTP proxy | API proxying for local dev | https://nginx.org/en/docs/http/ngx_http_proxy_module.html |
+| Render.com docs | Production deployment configuration in `render.yaml` | https://render.com/docs |
+| OWASP Cheat Sheet — *Password Storage* | bcrypt-based password hashing approach | https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html |
+| OWASP Cheat Sheet — *JSON Web Token for Java* (general JWT principles) | Session JWT design | https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html |
+
+
+## Code attribution summary
+
+- **AES core (`frontend/src/crypto/aes.js`)**: written from scratch from FIPS 197.
+- **Mode implementations (`frontend/src/crypto/modes.js`)**: written from scratch from NIST SP 800-38A.
+- **Encoding helpers (`frontend/src/crypto/encode.js`)**: original code (zero padding, hex/text conversions).
+- **Backend authentication**: implemented using FastAPI's documented patterns and PyJWT/bcrypt as standard primitives — no copy-pasted route code.
