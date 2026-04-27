@@ -86,10 +86,10 @@ function CTRDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <XORCircle cx={cx} cy={Y.xorY} active={active} delay={d + 200} />
 
         {/* Data input from left */}
-        <DataBox x={cx - colW + 45} y={Y.dataY} w={90} h={36} label={dataLabel}
+        <DataBox x={cx - colW + 75} y={Y.dataY} w={90} h={36} label={dataLabel}
           value={dataValue} color={isEncrypt ? '#b8d4e3' : '#c8b8d4'}
           active={active} delay={d + 50} />
-        <Arrow x1={cx - colW + 135} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
+        <Arrow x1={cx - colW + 165} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
           active={active} delay={d + 180} />
 
         {/* Arrow: XOR down to output */}
