@@ -807,6 +807,222 @@ select:focus {
   flex-shrink: 0;
 }
 
+.flow-diagram-hint {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted, #6c6c80);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ===== AES Internals Modal ===== */
+.aes-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 15, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: aes-modal-fade 0.18s ease-out;
+}
+
+@keyframes aes-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.aes-modal {
+  background: var(--card-bg, #14142a);
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  width: min(720px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.aes-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 18px 22px 12px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.aes-modal-header h3 {
+  margin: 0;
+  color: var(--accent, #6366f1);
+  font-size: 1.1rem;
+}
+
+.aes-modal-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6c6c80);
+  margin-top: 4px;
+}
+
+.aes-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #6c6c80);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.aes-modal-close:hover {
+  color: #fff;
+}
+
+.aes-modal-body {
+  padding: 16px 22px 22px;
+}
+
+.aes-step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.aes-step-phase {
+  font-weight: 600;
+  color: #ffab40;
+  font-size: 0.95rem;
+}
+
+.aes-step-counter {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6c6c80);
+}
+
+.aes-phase-explainer {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #a0a0c0);
+  margin-bottom: 16px;
+  line-height: 1.5;
+  background: rgba(99, 102, 241, 0.06);
+  border-left: 3px solid #6366f1;
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
+.aes-grids-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 14px 0;
+  flex-wrap: wrap;
+}
+
+.aes-arrow {
+  font-size: 1.8rem;
+  color: var(--accent, #6366f1);
+  font-weight: 700;
+}
+
+.aes-grid-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.aes-grid-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6c6c80);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 38px);
+  grid-template-rows: repeat(4, 38px);
+  gap: 3px;
+  background: #2a2a4a;
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.aes-cell {
+  background: #1a1a2e;
+  color: #e0e0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 2px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.aes-cell.changed {
+  background: #ffab40;
+  color: #1a1a2e;
+}
+
+.aes-roundkey-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 14px 0;
+  padding: 10px;
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: 6px;
+}
+
+.aes-roundkey-note {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6c6c80);
+  font-style: italic;
+  max-width: 220px;
+}
+
+.aes-modal-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px 0 12px;
+}
+
+.aes-io-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.aes-io-strip code {
+  font-family: 'Consolas', monospace;
+  color: #c0c0e0;
+  word-break: break-all;
+}
+
+.aes-io-label {
+  color: var(--text-muted, #6c6c80);
+  font-weight: 600;
+}
+
+/* AES box click affordance — applied by JS via class on the SVG <g> */
+.aes-box-clickable {
+  cursor: pointer;
+}
+
+.aes-box-clickable:hover rect {
+  filter: brightness(1.15);
+}
+
 /* ===== Responsive: Tablet (≤900px) ===== */
 @media (max-width: 900px) {
   .main-grid {

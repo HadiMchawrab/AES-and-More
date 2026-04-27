@@ -68,12 +68,17 @@ export function DataBox({ x, y, w = 120, h = 36, label, value, color = '#b8d4e3'
   );
 }
 
-// AES Encrypt/Decrypt operation box
-export function AESBox({ x, y, w = 100, h = 44, isEncrypt = true, active, delay = 0 }) {
+// AES Encrypt/Decrypt operation box. Clickable when onClick is provided and active.
+export function AESBox({ x, y, w = 100, h = 44, isEncrypt = true, active, delay = 0, onClick }) {
   const bgActive = isEncrypt ? '#5c8a5c' : '#8a6a5c';
   const bgInactive = '#2a3a2a';
+  const clickable = !!onClick && active;
   return (
-    <g className={`diagram-node ${active ? 'active' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
+    <g
+      className={`diagram-node ${active ? 'active' : ''} ${clickable ? 'aes-box-clickable' : ''}`}
+      style={{ transitionDelay: `${delay}ms` }}
+      onClick={clickable ? onClick : undefined}
+    >
       <rect x={x} y={y} width={w} height={h} rx={4}
         fill={active ? bgActive : bgInactive}
         stroke={active ? (isEncrypt ? '#7cba7c' : '#ba8a7c') : '#4a4a6a'}
@@ -86,6 +91,12 @@ export function AESBox({ x, y, w = 100, h = 44, isEncrypt = true, active, delay 
       >
         {isEncrypt ? 'Encrypt' : 'Decrypt'}
       </text>
+      {clickable && (
+        <text x={x + w - 6} y={y + 10} textAnchor="end"
+          fill="#fff" fontSize={9} opacity={0.7}>
+          🔍
+        </text>
+      )}
     </g>
   );
 }

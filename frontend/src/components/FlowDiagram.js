@@ -4,6 +4,7 @@ import CBCDiagram from './diagrams/CBCDiagram';
 import CFBDiagram from './diagrams/CFBDiagram';
 import OFBDiagram from './diagrams/OFBDiagram';
 import CTRDiagram from './diagrams/CTRDiagram';
+import AesInternalsModal from './AesInternalsModal';
 
 const DIAGRAM_MAP = {
   ecb: ECBDiagram,
@@ -46,10 +47,16 @@ const LEGEND_ITEMS = {
 function FlowDiagram({ mode, result }) {
   const [animatedUpTo, setAnimatedUpTo] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [aesModal, setAesModal] = useState(null); // { input, isEncrypt, label } | null
 
   const blocks = result?.block_details;
   const totalBlocks = blocks?.length || 0;
   const isEncrypt = result?.type === 'encrypt';
+
+  const handleAesClick = useCallback((info) => {
+    setAesModal(info);
+  }, []);
+  const handleAesClose = useCallback(() => setAesModal(null), []);
 
   // Reset animation when result changes
   useEffect(() => {
@@ -151,6 +158,7 @@ function FlowDiagram({ mode, result }) {
           blocks={blocks}
           isEncrypt={isEncrypt}
           animatedUpTo={animatedUpTo}
+          onAesClick={handleAesClick}
         />
       </div>
 
@@ -165,6 +173,19 @@ function FlowDiagram({ mode, result }) {
           );
         })}
       </div>
+
+      <div className="flow-diagram-hint">
+        Tip: click any <strong>Encrypt</strong> or <strong>Decrypt</strong> box to see the AES internals for that block.
+      </div>
+
+      <AesInternalsModal
+        open={!!aesModal}
+        onClose={handleAesClose}
+        blockInput={aesModal?.input}
+        key_hex={result?.key_hex}
+        isEncrypt={aesModal?.isEncrypt}
+        contextLabel={aesModal?.label}
+      />
     </div>
   );
 }

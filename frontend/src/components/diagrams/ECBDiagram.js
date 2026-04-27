@@ -12,7 +12,7 @@ import { DataBox, AESBox, KeyArrow, Arrow, DiagramDefs } from './DiagramPrimitiv
  *
  * Each block is independent — no arrows between blocks.
  */
-function ECBDiagram({ blocks, isEncrypt, animatedUpTo }) {
+function ECBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 240;
   const startX = 50;
@@ -23,6 +23,11 @@ function ECBDiagram({ blocks, isEncrypt, animatedUpTo }) {
   function renderBlock(block, i, cx, active, d) {
     const inLabel = isEncrypt ? `P${i + 1}` : `C${i + 1}`;
     const outLabel = isEncrypt ? `C${i + 1}` : `P${i + 1}`;
+    const aesClick = onAesClick && (() => onAesClick({
+      input: block.input,
+      isEncrypt,
+      label: `ECB · Block ${i + 1} · ${isEncrypt ? 'Encrypting plaintext' : 'Decrypting ciphertext'}`,
+    }));
     return (
       <g key={i}>
         {/* Input */}
@@ -37,7 +42,8 @@ function ECBDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <KeyArrow x={cx - 50} y={90} active={active} delay={d + 100} />
 
         {/* AES box */}
-        <AESBox x={cx - 50} y={68} isEncrypt={isEncrypt} active={active} delay={d + 120} />
+        <AESBox x={cx - 50} y={68} isEncrypt={isEncrypt} active={active} delay={d + 120}
+          onClick={aesClick} />
 
         {/* Arrow: AES down to output */}
         <Arrow x1={cx} y1={112} x2={cx} y2={136} active={active} delay={d + 180} />

@@ -16,7 +16,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
  * Decryption: same structure, but input to XOR is C[i], output is P[i],
  * and feedback comes from the ciphertext input (C[i]).
  */
-function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
+function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 130;
@@ -60,7 +60,12 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <KeyArrow x={cx - 50} y={Y.keyY} active={active} delay={d + 80} />
 
         {/* AES Encrypt (always encrypt, even for decryption) */}
-        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100} />
+        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100}
+          onClick={onAesClick && (() => onAesClick({
+            input: block.feedback_input,
+            isEncrypt: true,
+            label: `CFB · Block ${i + 1} · Encrypting feedback (${i === 0 ? 'IV' : `C${i}`})`,
+          }))} />
 
         {/* Arrow: AES down to XOR (keystream) */}
         <Arrow x1={cx} y1={Y.aesBot} x2={cx} y2={Y.xorY - 12}

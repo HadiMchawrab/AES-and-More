@@ -16,7 +16,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, DiagramDefs } from './Diag
  *
  * All blocks independent — no chaining.
  */
-function CTRDiagram({ blocks, isEncrypt, animatedUpTo }) {
+function CTRDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 130;
@@ -68,7 +68,12 @@ function CTRDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <KeyArrow x={cx - 50} y={Y.keyY} active={active} delay={d + 80} />
 
         {/* AES Encrypt */}
-        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100} />
+        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100}
+          onClick={onAesClick && (() => onAesClick({
+            input: block.counter_bytes,
+            isEncrypt: true,
+            label: `CTR · Block ${i + 1} · Encrypting counter ${counterValue}`,
+          }))} />
 
         {/* Arrow: AES down to XOR */}
         <Arrow x1={cx} y1={Y.aesBot} x2={cx} y2={Y.xorY - 12}

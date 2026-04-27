@@ -15,7 +15,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
  *         └──→ routes right and up to next XOR
  */
 
-function CBCDiagram({ blocks, isEncrypt, animatedUpTo }) {
+function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 80;
@@ -108,7 +108,12 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <KeyArrow x={cx - 50} y={ENC.keyY} active={active} delay={d + 160} />
 
         {/* AES Encrypt */}
-        <AESBox x={cx - 50} y={ENC.aesY} isEncrypt={true} active={active} delay={d + 200} />
+        <AESBox x={cx - 50} y={ENC.aesY} isEncrypt={true} active={active} delay={d + 200}
+          onClick={onAesClick && (() => onAesClick({
+            input: block.after_xor,
+            isEncrypt: true,
+            label: `CBC · Block ${i + 1} · Encrypting (P${i + 1} XOR ${i === 0 ? 'IV' : `C${i}`})`,
+          }))} />
 
         {/* Arrow: AES ↓ C  (18px gap) */}
         <Arrow x1={cx} y1={ENC.aesBot} x2={cx} y2={ENC.cY}
@@ -151,7 +156,12 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <KeyArrow x={cx - 50} y={DEC.keyY} active={active} delay={d + 80} />
 
         {/* AES Decrypt */}
-        <AESBox x={cx - 50} y={DEC.aesY} isEncrypt={false} active={active} delay={d + 100} />
+        <AESBox x={cx - 50} y={DEC.aesY} isEncrypt={false} active={active} delay={d + 100}
+          onClick={onAesClick && (() => onAesClick({
+            input: block.input,
+            isEncrypt: false,
+            label: `CBC · Block ${i + 1} · Decrypting ciphertext`,
+          }))} />
 
         {/* Arrow: AES ↓ XOR */}
         <Arrow x1={cx} y1={DEC.aesBot} x2={cx} y2={DEC.xorY - 12}

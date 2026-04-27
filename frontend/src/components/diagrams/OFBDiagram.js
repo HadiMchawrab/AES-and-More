@@ -17,7 +17,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
  *         ↓
  *        C[i]
  */
-function OFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
+function OFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 130;
@@ -70,7 +70,12 @@ function OFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <KeyArrow x={cx - 50} y={Y.keyY} active={active} delay={d + 80} />
 
         {/* AES Encrypt */}
-        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100} />
+        <AESBox x={cx - 50} y={Y.aesY} isEncrypt={true} active={active} delay={d + 100}
+          onClick={onAesClick && (() => onAesClick({
+            input: block.feedback_input,
+            isEncrypt: true,
+            label: `OFB · Block ${i + 1} · Encrypting ${i === 0 ? 'Nonce' : `O${i}`}`,
+          }))} />
 
         {/* Feedback arrow: AES output → next block's feedback input
             Route: right from AES box, up, right to next feedback box */}
