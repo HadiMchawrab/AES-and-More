@@ -90,11 +90,8 @@ AES-and-More/
 │   └── ctr_mode.png
 │
 └── docs/
-    ├── architecture.md
     ├── aes_modes.md
-    ├── api.md
-    ├── implementation.md
-    └── sources.md              # ★ Citations and attribution
+    └── sources.md         
 ```
 
 ## Quick Start (Docker)
@@ -105,31 +102,6 @@ docker compose up --build
 
 Open **http://localhost:3000**.
 
-## Quick Start (Local Development)
-
-### Backend
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate    # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-Set `DATABASE_URL`, `JWT_SECRET`, and `ALLOWED_ORIGINS` in `backend/.env`
-(see "Environment variables" below).
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-Frontend runs at `http://localhost:3000` and expects the backend at
-`http://localhost:8000` (override with `REACT_APP_API_URL`).
 
 ## Backend API
 
@@ -144,8 +116,6 @@ The backend only handles authentication. All AES work is client-side.
 | `GET`  | `/auth/me`       | Current user (via session cookie) |
 
 ## Environment variables
-
-### Backend (`backend/.env` locally, Render env vars in prod)
 
 | Variable           | Purpose                                                          |
 |--------------------|------------------------------------------------------------------|
@@ -198,8 +168,5 @@ In production cryptosystems:
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) — system design and data flow
 - [AES Modes](docs/aes_modes.md) — how each mode works
-- [API Reference](docs/api.md) — endpoint documentation
-- [Implementation](docs/implementation.md) — code walkthrough
 - [**Sources & attribution**](docs/sources.md) — every reference used to build this project

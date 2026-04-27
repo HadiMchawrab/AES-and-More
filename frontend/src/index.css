@@ -457,7 +457,7 @@ select:focus {
   line-height: 1.6;
 }
 
-.disclaimer strong {
+.disclaimer > strong:first-child {
   display: block;
   margin-bottom: 4px;
 }
