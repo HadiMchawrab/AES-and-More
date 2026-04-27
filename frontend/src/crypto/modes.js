@@ -245,6 +245,117 @@ export const CFB = {
   },
 };
 
+// ─── CFB-8 ────────────────────────────────────────────────────────────
+// NIST SP 800-38A, CFB with s = 8 bits.
+//   I[1] = IV (128 bits)
+//   O[j] = AES_Encrypt(I[j], K)
+//   C[j] = P[j] XOR MSB_8(O[j])      (select leftmost byte, discard the other 15)
+//   I[j+1] = LSB_120(I[j]) || C[j]   (shift left by 8 bits, append ciphertext byte)
+//
+// Decryption is identical except P[j] = C[j] XOR MSB_8(O[j]); the byte shifted
+// into the register is still the ciphertext byte.
+//
+// Operates per byte, so no padding is needed — ciphertext length == plaintext length.
+function cfb8ShiftIn(register, byte) {
+  const next = new Uint8Array(BLOCK_SIZE);
+  next.set(register.subarray(1));        // shift left by 8 bits (drop MSB byte)
+  next[BLOCK_SIZE - 1] = byte;            // append new byte at the right (LSB)
+  return next;
+}
+
+export const CFB8 = {
+  encrypt(plaintext, key) {
+    const cipherBytes = new Uint8Array(plaintext.length);
+    const blockDetails = [];
+    let register = new Uint8Array(ZERO_IV);
+
+    for (let j = 0; j < plaintext.length; j++) {
+      const aesOutput = aesEncryptBlock(register, key);
+      const selected = aesOutput[0];        // MSB_8: leftmost byte
+      const pByte = plaintext[j];
+      const cByte = (pByte ^ selected) & 0xff;
+      cipherBytes[j] = cByte;
+
+      blockDetails.push({
+        block_number: j,
+        input: bytesToHex(Uint8Array.of(pByte)),
+        feedback_input: bytesToHex(register),
+        aes_output: bytesToHex(aesOutput),
+        keystream: bytesToHex(Uint8Array.of(selected)),
+        discarded: bytesToHex(aesOutput.subarray(1)),
+        xor_with: bytesToHex(Uint8Array.of(selected)),
+        operation: 'P_byte XOR MSB_8(AES_Encrypt(register, key))',
+        output: bytesToHex(Uint8Array.of(cByte)),
+        description:
+          `Byte ${j}: AES-encrypt the 128-bit shift register, take the top byte ` +
+          `as keystream, XOR with plaintext byte. Then shift the ciphertext byte ` +
+          `into the register from the right.`,
+      });
+
+      register = cfb8ShiftIn(register, cByte);
+    }
+
+    return {
+      ciphertext: cipherBytes,
+      pad_size: 0,
+      block_details: blockDetails,
+      mode_info: {
+        name: 'CFB-8 (Cipher Feedback, s = 8)',
+        iv_used: bytesToHex(ZERO_IV),
+        description:
+          'Byte-oriented CFB. Each plaintext byte is XORed with the leftmost byte of ' +
+          'AES_Encrypt(register, K); the ciphertext byte is then shifted into the register. ' +
+          'Ciphertext length equals plaintext length — no padding.',
+      },
+    };
+  },
+
+  decrypt(ciphertext, key) {
+    const plainBytes = new Uint8Array(ciphertext.length);
+    const blockDetails = [];
+    let register = new Uint8Array(ZERO_IV);
+
+    for (let j = 0; j < ciphertext.length; j++) {
+      const aesOutput = aesEncryptBlock(register, key);
+      const selected = aesOutput[0];
+      const cByte = ciphertext[j];
+      const pByte = (cByte ^ selected) & 0xff;
+      plainBytes[j] = pByte;
+
+      blockDetails.push({
+        block_number: j,
+        input: bytesToHex(Uint8Array.of(cByte)),
+        feedback_input: bytesToHex(register),
+        aes_output: bytesToHex(aesOutput),
+        keystream: bytesToHex(Uint8Array.of(selected)),
+        discarded: bytesToHex(aesOutput.subarray(1)),
+        xor_with: bytesToHex(Uint8Array.of(selected)),
+        operation: 'C_byte XOR MSB_8(AES_Encrypt(register, key))',
+        output: bytesToHex(Uint8Array.of(pByte)),
+        description:
+          `Byte ${j}: AES-encrypt the register (decryption uses AES encrypt, not decrypt!), ` +
+          `take the top byte as keystream, XOR with ciphertext byte to recover plaintext. ` +
+          `Then shift the ciphertext byte into the register.`,
+      });
+
+      register = cfb8ShiftIn(register, cByte);
+    }
+
+    return {
+      plaintext: plainBytes,
+      pad_size: 0,
+      block_details: blockDetails,
+      mode_info: {
+        name: 'CFB-8 (Cipher Feedback, s = 8)',
+        iv_used: bytesToHex(ZERO_IV),
+        description:
+          'Decryption uses AES encryption (not decryption!) on the shift register. ' +
+          'The ciphertext byte is shifted into the register from the right after each step.',
+      },
+    };
+  },
+};
+
 // ─── OFB ──────────────────────────────────────────────────────────────
 export const OFB = {
   encrypt(plaintext, key) {
@@ -415,4 +526,4 @@ export const CTR = {
   },
 };
 
-export const MODE_MAP = { ecb: ECB, cbc: CBC, cfb: CFB, ofb: OFB, ctr: CTR };
+export const MODE_MAP = { ecb: ECB, cbc: CBC, cfb: CFB, cfb8: CFB8, ofb: OFB, ctr: CTR };

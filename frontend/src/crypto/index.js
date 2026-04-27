@@ -38,7 +38,9 @@ export function decryptLocal({ mode, ciphertext, key, keyFormat, padSize = 0, in
   const keyBytes = parseKey(key, keyFormat);
 
   if (ciphertextBytes.length === 0) throw new Error('Ciphertext cannot be empty');
-  if (ciphertextBytes.length % 16 !== 0) {
+  // CFB-8 is byte-oriented, so any non-zero length is valid. Other modes require
+  // a multiple of the 16-byte AES block size.
+  if (mode !== 'cfb8' && ciphertextBytes.length % 16 !== 0) {
     throw new Error(
       `Ciphertext length must be a multiple of 16 bytes. Got ${ciphertextBytes.length} bytes.`
     );

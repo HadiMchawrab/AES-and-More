@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ECBDiagram from './diagrams/ECBDiagram';
 import CBCDiagram from './diagrams/CBCDiagram';
 import CFBDiagram from './diagrams/CFBDiagram';
+import CFB8Diagram from './diagrams/CFB8Diagram';
 import OFBDiagram from './diagrams/OFBDiagram';
 import CTRDiagram from './diagrams/CTRDiagram';
 import AesInternalsModal from './AesInternalsModal';
@@ -10,6 +11,7 @@ const DIAGRAM_MAP = {
   ecb: ECBDiagram,
   cbc: CBCDiagram,
   cfb: CFBDiagram,
+  cfb8: CFB8Diagram,
   ofb: OFBDiagram,
   ctr: CTRDiagram,
 };
@@ -17,11 +19,12 @@ const DIAGRAM_MAP = {
 // Which legend swatches each mode actually renders.
 // ECB/CBC show encrypt OR decrypt AES box depending on direction; CFB/OFB/CTR always show AES encrypt.
 const MODE_LEGEND_KEYS = {
-  ecb: { enc: ['plaintext', 'ciphertext', 'aes-enc'],                      dec: ['plaintext', 'ciphertext', 'aes-dec'] },
-  cbc: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],         dec: ['plaintext', 'ciphertext', 'aes-dec', 'xor', 'iv'] },
-  cfb: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],         dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
-  ofb: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],         dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
-  ctr: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'counter'],    dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'counter'] },
+  ecb:  { enc: ['plaintext', 'ciphertext', 'aes-enc'],                     dec: ['plaintext', 'ciphertext', 'aes-dec'] },
+  cbc:  { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],        dec: ['plaintext', 'ciphertext', 'aes-dec', 'xor', 'iv'] },
+  cfb:  { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],        dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
+  cfb8: { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],        dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
+  ofb:  { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'],        dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'iv'] },
+  ctr:  { enc: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'counter'],   dec: ['plaintext', 'ciphertext', 'aes-enc', 'xor', 'counter'] },
 };
 
 const LEGEND_ITEMS = {
@@ -41,7 +44,7 @@ const LEGEND_ITEMS = {
  * Controls: Play/Reset animation, step forward/back.
  *
  * Props:
- *   - mode: 'ecb' | 'cbc' | 'cfb' | 'ofb' | 'ctr'
+ *   - mode: 'ecb' | 'cbc' | 'cfb' | 'cfb8' | 'ofb' | 'ctr'
  *   - result: API response with block_details
  */
 function FlowDiagram({ mode, result }) {

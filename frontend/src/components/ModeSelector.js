@@ -17,10 +17,17 @@ const MODES = [
   },
   {
     id: 'cfb',
-    label: 'CFB',
-    name: 'Cipher Feedback',
+    label: 'CFB-128',
+    name: 'Cipher Feedback (s = 128)',
     description:
-      'Turns AES into a stream cipher. Encrypts the previous ciphertext (or IV) to produce a keystream, then XORs with plaintext. Only uses AES encryption, never decryption.',
+      'Full-block CFB. Encrypts the previous ciphertext (or IV) to produce a 128-bit keystream, then XORs with the plaintext block. Only uses AES encryption, never decryption.',
+  },
+  {
+    id: 'cfb8',
+    label: 'CFB-8',
+    name: 'Cipher Feedback (s = 8)',
+    description:
+      'Byte-oriented CFB. A 128-bit shift register is AES-encrypted; the leftmost 8 bits of the output are XORed with one plaintext byte to produce one ciphertext byte, which is then shifted into the register. No padding required — ciphertext is the same length as plaintext.',
   },
   {
     id: 'ofb',
