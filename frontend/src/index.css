@@ -888,6 +888,19 @@ select:focus {
   margin-bottom: 10px;
 }
 
+.aes-step-phase-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aes-inline-btn {
+  width: 32px;
+  height: 28px;
+  font-size: 0.75rem;
+  padding: 0;
+}
+
 .aes-step-phase {
   font-weight: 600;
   color: #ffab40;
@@ -983,13 +996,6 @@ select:focus {
   color: var(--text-muted, #6c6c80);
   font-style: italic;
   max-width: 220px;
-}
-
-.aes-modal-controls {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 18px 0 12px;
 }
 
 .aes-io-strip {

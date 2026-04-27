@@ -83,11 +83,6 @@ function AesInternalsModal({ open, onClose, blockInput, key_hex, isEncrypt, cont
     if (!trace) return;
     setStepIdx((i) => Math.min(trace.steps.length - 1, i + 1));
   }, [trace]);
-  const handleReset = useCallback(() => setStepIdx(0), []);
-  const handleEnd = useCallback(() => {
-    if (!trace) return;
-    setStepIdx(trace.steps.length - 1);
-  }, [trace]);
 
   if (!open) return null;
 
@@ -126,9 +121,19 @@ function AesInternalsModal({ open, onClose, blockInput, key_hex, isEncrypt, cont
 
         <div className="aes-modal-body">
           <div className="aes-step-header">
-            <span className="aes-step-phase">
-              Round {step.round} — {step.phase}
-            </span>
+            <div className="aes-step-phase-row">
+              <button onClick={handleStepBack} className="flow-ctrl-btn aes-inline-btn"
+                title="Step back" disabled={stepIdx === 0}>
+                &#x23EA;
+              </button>
+              <span className="aes-step-phase">
+                Round {step.round} — {step.phase}
+              </span>
+              <button onClick={handleStepForward} className="flow-ctrl-btn aes-inline-btn"
+                title="Step forward" disabled={stepIdx >= totalSteps - 1}>
+                &#x23E9;
+              </button>
+            </div>
             <span className="aes-step-counter">
               Step {stepIdx + 1} / {totalSteps}
             </span>
@@ -150,21 +155,6 @@ function AesInternalsModal({ open, onClose, blockInput, key_hex, isEncrypt, cont
               </div>
             </div>
           )}
-
-          <div className="aes-modal-controls">
-            <button onClick={handleReset} className="flow-ctrl-btn" title="Reset" disabled={stepIdx === 0}>
-              &#x23EE;
-            </button>
-            <button onClick={handleStepBack} className="flow-ctrl-btn" title="Step back" disabled={stepIdx === 0}>
-              &#x23EA;
-            </button>
-            <button onClick={handleStepForward} className="flow-ctrl-btn" title="Step forward" disabled={stepIdx >= totalSteps - 1}>
-              &#x23E9;
-            </button>
-            <button onClick={handleEnd} className="flow-ctrl-btn" title="Jump to end" disabled={stepIdx >= totalSteps - 1}>
-              &#x23ED;
-            </button>
-          </div>
 
           <div className="aes-io-strip">
             <div>
