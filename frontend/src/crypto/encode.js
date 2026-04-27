@@ -77,24 +77,15 @@ export function zeroPad(data) {
   return { padded, padSize };
 }
 
-export function zeroUnpad(data) {
+export function zeroUnpad(data, padSize = 0) {
   if (data.length === 0) return data;
-
-  const padSize = data[data.length - 1];
 
   if (padSize === 0) {
     return data;
   }
 
-  if (padSize < 0 || padSize > BLOCK_SIZE || padSize > data.length) {
+  if (padSize < 0 || padSize >= BLOCK_SIZE || padSize > data.length) {
     throw new Error('Invalid padding size');
-  }
-
-  // Check that the previous padding bytes are actually zero
-  for (let i = data.length - padSize; i < data.length - 1; i++) {
-    if (data[i] !== 0) {
-      throw new Error('Invalid zero padding');
-    }
   }
 
   return data.slice(0, data.length - padSize);
