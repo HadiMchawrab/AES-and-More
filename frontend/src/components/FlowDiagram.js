@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ECBDiagram from './diagrams/ECBDiagram';
 import CBCDiagram from './diagrams/CBCDiagram';
 import CFBDiagram from './diagrams/CFBDiagram';
@@ -14,6 +14,15 @@ const DIAGRAM_MAP = {
   cfb8: CFB8Diagram,
   ofb: OFBDiagram,
   ctr: CTRDiagram,
+};
+
+const DIAGRAM_CAPTIONS = {
+  ecb:  { text: 'Each block processed independently' },
+  cbc:  { text: 'Blocks chained via XOR' },
+  cfb:  { text: 'Feedback from ciphertext' },
+  cfb8: { text: 'CFB with s = 8 (per-byte shift register)' },
+  ofb:  { text: 'Feedback from AES output (not ciphertext)', note: 'Dashed box = keystream generator (independent of data)' },
+  ctr:  { text: 'Independent counter per block', note: 'Dashed box = can be computed in parallel' },
 };
 
 // Which legend swatches each mode actually renders.
@@ -51,6 +60,8 @@ function FlowDiagram({ mode, result }) {
   const [animatedUpTo, setAnimatedUpTo] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [aesModal, setAesModal] = useState(null); // { input, isEncrypt, label } | null
+  const canvasRef = useRef(null);
+  const scrollPauseUntilRef = useRef(0); // timestamp after which animation may resume
 
   const blocks = result?.block_details;
   const totalBlocks = blocks?.length || 0;
@@ -61,13 +72,25 @@ function FlowDiagram({ mode, result }) {
   }, []);
   const handleAesClose = useCallback(() => setAesModal(null), []);
 
-  // Reset animation when result changes
+  // Reset animation and scroll when result changes
   useEffect(() => {
     setAnimatedUpTo(-1);
     setIsPlaying(false);
+    if (canvasRef.current) canvasRef.current.scrollLeft = 0;
   }, [result]);
 
-  // Auto-play animation
+  // Auto-scroll: fires every 3 blocks and pauses block animation while scrolling.
+  // Must be declared BEFORE the auto-play effect so it sets scrollPauseUntilRef
+  // before the play timer reads it.
+  useEffect(() => {
+    if (!canvasRef.current || animatedUpTo < 4 || animatedUpTo % 4 !== 0) return;
+    const canvas = canvasRef.current;
+    const approxColW = canvas.scrollWidth / Math.max(totalBlocks, 1);
+    canvas.scrollTo({ left: Math.max(0, (animatedUpTo) * approxColW), behavior: 'smooth' });
+    scrollPauseUntilRef.current = Date.now() + 520; // hold off next block until scroll settles
+  }, [animatedUpTo, totalBlocks]);
+
+  // Auto-play animation — waits out any scroll pause before advancing.
   useEffect(() => {
     if (!isPlaying || !blocks) return;
     if (animatedUpTo >= totalBlocks - 1) {
@@ -75,9 +98,10 @@ function FlowDiagram({ mode, result }) {
       return;
     }
 
+    const pauseRemaining = Math.max(0, scrollPauseUntilRef.current - Date.now());
     const timer = setTimeout(() => {
       setAnimatedUpTo((prev) => prev + 1);
-    }, 600);
+    }, 600 + pauseRemaining);
 
     return () => clearTimeout(timer);
   }, [isPlaying, animatedUpTo, totalBlocks, blocks]);
@@ -124,6 +148,18 @@ function FlowDiagram({ mode, result }) {
   const DiagramComponent = DIAGRAM_MAP[mode];
   if (!DiagramComponent) return null;
 
+  const cap = DIAGRAM_CAPTIONS[mode];
+  const captionLabel = cap
+    ? `(${isEncrypt ? 'a' : 'b'}) ${isEncrypt ? 'Encryption' : 'Decryption'} — ${cap.text}`
+    : null;
+  const captionNote = cap
+    ? (mode === 'cfb8'
+        ? (totalBlocks > 4
+            ? `Showing 4 of ${totalBlocks} segments (one per plaintext byte)`
+            : `${totalBlocks} segment${totalBlocks === 1 ? '' : 's'} (one per plaintext byte)`)
+        : cap.note || null)
+    : null;
+
   return (
     <div className="flow-diagram-container">
       <div className="flow-diagram-header">
@@ -156,7 +192,7 @@ function FlowDiagram({ mode, result }) {
         </button>
       </div>
 
-      <div className="flow-diagram-canvas">
+      <div className="flow-diagram-canvas" ref={canvasRef}>
         <DiagramComponent
           blocks={blocks}
           isEncrypt={isEncrypt}
@@ -164,6 +200,13 @@ function FlowDiagram({ mode, result }) {
           onAesClick={handleAesClick}
         />
       </div>
+
+      {captionLabel && (
+        <div className="flow-diagram-caption">
+          <span>{captionLabel}</span>
+          {captionNote && <span className="flow-diagram-caption-note">{captionNote}</span>}
+        </div>
+      )}
 
       <div className="flow-diagram-legend">
         {(MODE_LEGEND_KEYS[mode]?.[isEncrypt ? 'enc' : 'dec'] || []).map((key) => {

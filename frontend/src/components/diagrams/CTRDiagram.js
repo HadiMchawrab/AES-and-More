@@ -122,12 +122,6 @@ function CTRDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       })}
 
 
-      <text x={svgW / 2} y={svgH - 20} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Independent counter per block
-      </text>
-      <text x={svgW / 2} y={svgH - 5} textAnchor="middle" fill="#4a6a8a" fontSize={9}>
-        Dashed box = can be computed in parallel
-      </text>
     </svg>
   );
 }

@@ -69,9 +69,6 @@ function ECBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       })}
 
 
-      <text x={svgW / 2} y={svgH - 5} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Each block processed independently
-      </text>
     </svg>
   );
 }

@@ -137,12 +137,6 @@ function OFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 
-      <text x={svgW / 2} y={svgH - 20} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Feedback from AES output (not ciphertext)
-      </text>
-      <text x={svgW / 2} y={svgH - 5} textAnchor="middle" fill="#4a6a8a" fontSize={9}>
-        Dashed box = keystream generator (independent of data)
-      </text>
     </svg>
   );
 }

@@ -216,9 +216,6 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 
-      <text x={viewX + svgW / 2} y={svgH - 5} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Blocks chained via XOR
-      </text>
     </svg>
   );
 }

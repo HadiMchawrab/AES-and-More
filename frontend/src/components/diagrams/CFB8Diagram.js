@@ -295,14 +295,6 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
         return renderFeedbackArrow(prevEntry, prevCx, nextEntry, nextCx, colIdx);
       })}
 
-      <text x={svgW / 2} y={svgH - 22} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — CFB with s = 8 (per-byte shift register)
-      </text>
-      <text x={svgW / 2} y={svgH - 6} textAnchor="middle" fill="#4a6a8a" fontSize={9}>
-        {total > 4
-          ? `Showing 4 of ${total} segments (one per plaintext byte)`
-          : `${total} segment${total === 1 ? '' : 's'} (one per plaintext byte)`}
-      </text>
     </svg>
   );
 }

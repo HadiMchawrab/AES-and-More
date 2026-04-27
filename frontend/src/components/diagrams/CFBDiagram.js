@@ -134,9 +134,6 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 
-      <text x={svgW / 2} y={svgH - 5} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Feedback from ciphertext
-      </text>
     </svg>
   );
 }
