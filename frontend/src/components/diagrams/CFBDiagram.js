@@ -78,10 +78,10 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
         <XORCircle cx={cx} cy={Y.xorY} active={active} delay={d + 180} />
 
         {/* Data input from left into XOR */}
-        <DataBox x={cx - colW + 20} y={Y.dataY} w={90} h={36} label={dataLabel}
+        <DataBox x={cx - colW + 35} y={Y.dataY} w={90} h={36} label={dataLabel}
           value={dataValue} color={isEncrypt ? '#b8d4e3' : '#c8b8d4'}
           active={active} delay={d + 50} />
-        <Arrow x1={cx - colW + 110} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
+        <Arrow x1={cx - colW + 125} y1={Y.xorY} x2={cx - 12} y2={Y.xorY}
           active={active} delay={d + 160} />
 
         {/* Arrow: XOR down to output */}
@@ -100,8 +100,8 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
             <PolyArrow
               points={[
                 [cx + 55, Y.outY + 18],            // Right edge of output
-                [cx + colW / 2 + 10, Y.outY + 18], // Midpoint right
-                [cx + colW / 2 + 10, Y.fbY + 18],  // Up to feedback level
+                [cx + colW / 2 + 25, Y.outY + 18], // Midpoint right
+                [cx + colW / 2 + 25, Y.fbY + 18],  // Up to feedback level
                 [cx + colW - 55, Y.fbY + 18],       // Into next feedback box
               ]}
               active={active} delay={d + 300}
@@ -112,9 +112,9 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo }) {
             // In CFB decrypt, feedback = ciphertext input, which is block.input
             <PolyArrow
               points={[
-                [cx - colW + 110, Y.dataY + 4],     // Right of data box
-                [cx + colW / 2 + 10, Y.dataY + 4],  // Route right
-                [cx + colW / 2 + 10, Y.fbY + 18],   // Up to feedback level
+                [cx - colW + 125, Y.dataY + 4],     // Right of data box
+                [cx + colW / 2 + 25, Y.dataY + 4],  // Route right
+                [cx + colW / 2 + 25, Y.fbY + 18],   // Up to feedback level
                 [cx + colW - 55, Y.fbY + 18],        // Into next feedback
               ]}
               active={active} delay={d + 300}
