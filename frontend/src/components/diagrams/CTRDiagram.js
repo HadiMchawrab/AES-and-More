@@ -117,7 +117,7 @@ function CTRDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       {displayBlocks.map((block, i) => {
         const cx = startX + i * colW + colW / 2;
         const active = i <= animatedUpTo;
-        const d = active ? i * 400 : 0;
+        const d = 0;
         return renderBlock(block, i, cx, active, d);
       })}
 

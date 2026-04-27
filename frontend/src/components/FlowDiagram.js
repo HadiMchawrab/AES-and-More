@@ -49,15 +49,19 @@ const LEGEND_ITEMS = {
 /**
  * Main FlowDiagram component.
  *
- * Renders the appropriate mode diagram with animated block-by-block reveal.
- * Controls: Play/Reset animation, step forward/back.
+ * Animation model:
+ *   animStep is the raw counter. Even values reveal a block; odd values reveal the
+ *   inter-block connector arrow that follows it.
+ *     animatedUpTo  = floor(animStep / 2)       — index of latest revealed block
+ *     connectorUpTo = floor((animStep - 1) / 2) — index of latest revealed connector
+ *   Max animStep = 2 * totalBlocks - 2  (last block, no trailing connector).
  *
  * Props:
  *   - mode: 'ecb' | 'cbc' | 'cfb' | 'cfb8' | 'ofb' | 'ctr'
  *   - result: API response with block_details
  */
 function FlowDiagram({ mode, result }) {
-  const [animatedUpTo, setAnimatedUpTo] = useState(-1);
+  const [animStep, setAnimStep] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [aesModal, setAesModal] = useState(null); // { input, isEncrypt, label } | null
   const canvasRef = useRef(null);
@@ -67,6 +71,11 @@ function FlowDiagram({ mode, result }) {
   const totalBlocks = blocks?.length || 0;
   const isEncrypt = result?.type === 'encrypt';
 
+  // Derived animation counters
+  const animatedUpTo = animStep >= 0 ? Math.floor(animStep / 2) : -1;
+  const connectorUpTo = animStep >= 1 ? Math.floor((animStep - 1) / 2) : -1;
+  const maxAnimStep = Math.max(0, 2 * totalBlocks - 2);
+
   const handleAesClick = useCallback((info) => {
     setAesModal(info);
   }, []);
@@ -74,12 +83,12 @@ function FlowDiagram({ mode, result }) {
 
   // Reset animation and scroll when result changes
   useEffect(() => {
-    setAnimatedUpTo(-1);
+    setAnimStep(-1);
     setIsPlaying(false);
     if (canvasRef.current) canvasRef.current.scrollLeft = 0;
   }, [result]);
 
-  // Auto-scroll: fires every 3 blocks and pauses block animation while scrolling.
+  // Auto-scroll: fires every 4 blocks and pauses block animation while scrolling.
   // Must be declared BEFORE the auto-play effect so it sets scrollPauseUntilRef
   // before the play timer reads it.
   useEffect(() => {
@@ -90,50 +99,53 @@ function FlowDiagram({ mode, result }) {
     scrollPauseUntilRef.current = Date.now() + 520; // hold off next block until scroll settles
   }, [animatedUpTo, totalBlocks]);
 
-  // Auto-play animation — waits out any scroll pause before advancing.
+  // Auto-play animation — connector steps (odd) are faster than block steps (even).
   useEffect(() => {
     if (!isPlaying || !blocks) return;
-    if (animatedUpTo >= totalBlocks - 1) {
+    if (animStep >= maxAnimStep) {
       setIsPlaying(false);
       return;
     }
 
+    const nextStep = animStep + 1;
+    // Odd step = inter-block connector arrow (quick); even step = new block (slower)
+    const stepDelay = nextStep % 2 === 1 ? 350 : 600;
     const pauseRemaining = Math.max(0, scrollPauseUntilRef.current - Date.now());
     const timer = setTimeout(() => {
-      setAnimatedUpTo((prev) => prev + 1);
-    }, 600 + pauseRemaining);
+      setAnimStep((prev) => prev + 1);
+    }, stepDelay + pauseRemaining);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, animatedUpTo, totalBlocks, blocks]);
+  }, [isPlaying, animStep, maxAnimStep, blocks]);
 
   const handlePlay = useCallback(() => {
-    if (animatedUpTo >= totalBlocks - 1) {
-      setAnimatedUpTo(-1);
+    if (animStep >= maxAnimStep) {
+      setAnimStep(-1);
       setTimeout(() => setIsPlaying(true), 100);
     } else {
       setIsPlaying(true);
     }
-  }, [animatedUpTo, totalBlocks]);
+  }, [animStep, maxAnimStep]);
 
   const handleReset = useCallback(() => {
     setIsPlaying(false);
-    setAnimatedUpTo(-1);
+    setAnimStep(-1);
   }, []);
 
   const handleStepForward = useCallback(() => {
     setIsPlaying(false);
-    setAnimatedUpTo((prev) => Math.min(prev + 1, totalBlocks - 1));
-  }, [totalBlocks]);
+    setAnimStep((prev) => Math.min(prev + 1, maxAnimStep));
+  }, [maxAnimStep]);
 
   const handleStepBack = useCallback(() => {
     setIsPlaying(false);
-    setAnimatedUpTo((prev) => Math.max(prev - 1, -1));
+    setAnimStep((prev) => Math.max(prev - 1, -1));
   }, []);
 
   const handleShowAll = useCallback(() => {
     setIsPlaying(false);
-    setAnimatedUpTo(totalBlocks - 1);
-  }, [totalBlocks]);
+    setAnimStep(maxAnimStep);
+  }, [maxAnimStep]);
 
   if (!result || !blocks || blocks.length === 0) {
     return (
@@ -176,15 +188,15 @@ function FlowDiagram({ mode, result }) {
           &#x23EE;
         </button>
         <button onClick={handleStepBack} className="flow-ctrl-btn" title="Step back"
-          disabled={animatedUpTo < 0}>
+          disabled={animStep < 0}>
           &#x23EA;
         </button>
         <button onClick={isPlaying ? () => setIsPlaying(false) : handlePlay}
           className="flow-ctrl-btn flow-ctrl-play" title={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? '\u23F8' : '\u25B6'}
+          {isPlaying ? '⏸' : '▶'}
         </button>
         <button onClick={handleStepForward} className="flow-ctrl-btn" title="Step forward"
-          disabled={animatedUpTo >= totalBlocks - 1}>
+          disabled={animStep >= maxAnimStep}>
           &#x23E9;
         </button>
         <button onClick={handleShowAll} className="flow-ctrl-btn" title="Show all">
@@ -197,6 +209,7 @@ function FlowDiagram({ mode, result }) {
           blocks={blocks}
           isEncrypt={isEncrypt}
           animatedUpTo={animatedUpTo}
+          connectorUpTo={connectorUpTo}
           onAesClick={handleAesClick}
         />
       </div>

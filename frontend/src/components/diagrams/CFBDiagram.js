@@ -16,7 +16,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
  * Decryption: same structure, but input to XOR is C[i], output is P[i],
  * and feedback comes from the ciphertext input (C[i]).
  */
-function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
+function CFBDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 130;
@@ -90,7 +90,7 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
           value={outValue} color={isEncrypt ? '#d4c8b0' : '#b0d4b8'}
           active={active} delay={d + 260} />
 
-        {/* Feedback arrow to next block */}
+        {/* Feedback arrow to next block — lights up after current block, before next */}
         {i < total - 1 && (
           isEncrypt ? (
             // Encryption: C output feeds back → route right and up to next feedback input
@@ -101,12 +101,10 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
                 [cx + colW / 2 + 25, Y.fbY + 18],  // Up to feedback level
                 [cx + colW - 55, Y.fbY + 18],       // Into next feedback box
               ]}
-              active={active} delay={d + 300}
+              active={i <= connectorUpTo} delay={0}
             />
           ) : (
-            // Decryption: C input (the data input) feeds to next feedback
-            // The ciphertext C[i+1] is the next block's data, but C[i] feeds as feedback
-            // In CFB decrypt, feedback = ciphertext input, which is block.input
+            // Decryption: C input feeds to next feedback
             <PolyArrow
               points={[
                 [cx - colW + 140, Y.dataY + 4],     // Right of data box
@@ -114,7 +112,7 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
                 [cx + colW / 2 + 25, Y.fbY + 18],   // Up to feedback level
                 [cx + colW - 55, Y.fbY + 18],        // Into next feedback
               ]}
-              active={active} delay={d + 300}
+              active={i <= connectorUpTo} delay={0}
             />
           )
         )}
@@ -130,7 +128,7 @@ function CFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       {displayBlocks.map((block, i) => {
         const cx = startX + i * colW + colW / 2;
         const active = i <= animatedUpTo;
-        const d = active ? i * 400 : 0;
+        const d = 0;
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 

@@ -23,7 +23,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, Ellipsis, Diagr
  * For decryption the data input is C_j and the output is P_j; the byte shifted
  * into the next register is still the ciphertext byte (same as encrypt).
  */
-function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
+function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick }) {
   const all = blocks || [];
   const total = all.length;
 
@@ -76,7 +76,7 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
 
     const { data: block, origIndex: i } = entry;
     const active = i <= animatedUpTo;
-    const d = active ? colIdx * 400 : 0;
+    const d = 0;
 
     const dataLabel = isEncrypt ? `P${i + 1}` : `C${i + 1}`;
     const outLabel = isEncrypt ? `C${i + 1}` : `P${i + 1}`;
@@ -246,8 +246,8 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
     if (nextEntry.origIndex !== prevEntry.origIndex + 1) return null;
 
     const i = prevEntry.origIndex;
-    const active = i <= animatedUpTo;
-    const d = active ? colIdx * 400 : 0;
+    const active = i <= connectorUpTo; // inter-block: lights up after block i, before block i+1
+    const d = 0;
 
     // Source: bottom of the C/P output box for this column.
     const prevSelLeft = prevCx - selW / 2;
