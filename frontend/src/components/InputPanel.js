@@ -15,8 +15,25 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
   const [keyMode, setKeyMode] = useState('manual');
   const [randomKey, setRandomKey] = useState('');
   const [randomKeySize, setRandomKeySize] = useState(16);
+  const [randomKeyCopied, setRandomKeyCopied] = useState(false);
   const [initialCounter, setInitialCounter] = useState(0);
   const [padSize, setPadSize] = useState(0);
+
+  const handleCopyRandomKey = async () => {
+    if (!randomKey) return;
+    try {
+      await navigator.clipboard.writeText(randomKey);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = randomKey;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setRandomKeyCopied(true);
+    setTimeout(() => setRandomKeyCopied(false), 2000);
+  };
 
   const switchToRandom = (size) => {
     const newKey = generateRandomKeyHex(size);
@@ -202,12 +219,21 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
             }
           />
         ) : (
-          <input
-            type="text"
-            value={randomKey}
-            readOnly
-            style={{ color: 'var(--text-muted)', cursor: 'default' }}
-          />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={randomKey}
+              readOnly
+              style={{ color: 'var(--text-muted)', cursor: 'default', flex: 1 }}
+            />
+            <button
+              className={`btn-copy ${randomKeyCopied ? 'copied' : ''}`}
+              onClick={handleCopyRandomKey}
+              disabled={!randomKey}
+            >
+              {randomKeyCopied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
         )}
       </div>
 
