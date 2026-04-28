@@ -75,11 +75,17 @@ function AesApp() {
   return (
     <div className="app">
       <header className="app-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-          <div style={{ textAlign: 'left' }}>
-            <h1>AES Encryption Modes</h1>
-            <p>An educational tool for understanding how AES block cipher modes work</p>
+        <div className="hieroglyph-title-band">
+          <div className="hieroglyph-fill hieroglyph-fill--left" aria-hidden="true">
+            {'𓂀𓇳𓋹𓆣𓏏𓂝𓁶𓀠𓂸𓃒𓆑𓅓𓄿𓇋𓈖𓉐𓊃𓋴𓌀𓍯𓎛𓏲'.repeat(12)}
           </div>
+          <h1>AES Encryption Modes</h1>
+          <div className="hieroglyph-fill hieroglyph-fill--right" aria-hidden="true">
+            {'𓂀𓇳𓋹𓆣𓏏𓂝𓁶𓀠𓂸𓃒𓆑𓅓𓄿𓇋𓈖𓉐𓊃𓋴𓌀𓍯𓎛𓏲'.repeat(12)}
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <p>An educational tool for understanding how AES block cipher modes work</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem' }}>
             <span style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
             <button className="btn-logout" onClick={logout}>Log out</button>

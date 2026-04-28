@@ -15,7 +15,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
  *         └──→ routes right and up to next XOR
  */
 
-function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
+function CBCDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 80;
@@ -123,7 +123,7 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
         <DataBox x={cx - 55} y={ENC.cY} w={110} label={`C${i + 1}`}
           value={block.output} color="#d4c8b0" active={active} delay={d + 300} />
 
-        {/* Chain arrow → next XOR  (polyline: right, up, right) */}
+        {/* Chain arrow → next XOR — lights up after current block, before next */}
         {i < total - 1 && (
           <PolyArrow
             points={[
@@ -132,7 +132,7 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
               [cx + colW / 2 + 15, ENC.xorY],        // up to XOR level
               [cx + colW - 12, ENC.xorY],             // into next XOR
             ]}
-            active={active} delay={d + 360}
+            active={i <= connectorUpTo} delay={0}
           />
         )}
       </g>
@@ -179,7 +179,7 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
               active={active} delay={d + 160} />
           </>
         ) : (
-          /* Prev C input feeds into this XOR: route from prev C box down-right to XOR */
+          /* Prev C → this XOR: inter-block connector, lights up between blocks */
           <PolyArrow
             points={[
               [cx - colW + 55, DEC.cBot],             // bottom-right of prev C
@@ -187,7 +187,7 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
               [cx - colW / 2 - 15, DEC.xorY],         // down to XOR level
               [cx - 12, DEC.xorY],                     // into XOR
             ]}
-            active={active} delay={d + 160}
+            active={(i - 1) <= connectorUpTo} delay={0}
           />
         )}
 
@@ -212,13 +212,10 @@ function CBCDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       {displayBlocks.map((block, i) => {
         const cx = startX + i * colW + colW / 2;
         const active = i <= animatedUpTo;
-        const d = active ? i * 400 : 0;
+        const d = 0;
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 
-      <text x={viewX + svgW / 2} y={svgH - 5} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Blocks chained via XOR
-      </text>
     </svg>
   );
 }

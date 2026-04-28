@@ -23,7 +23,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, Ellipsis, Diagr
  * For decryption the data input is C_j and the output is P_j; the byte shifted
  * into the next register is still the ciphertext byte (same as encrypt).
  */
-function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
+function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick }) {
   const all = blocks || [];
   const total = all.length;
 
@@ -45,7 +45,7 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
   const colW = 280;
   const startX = 100;
   const numCols = displayBlocks.length;
-  const svgW = startX + numCols * colW + 40;
+  const svgW = startX + numCols * colW + 60;
   const svgH = 380;
 
   // Y layout
@@ -76,7 +76,7 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
 
     const { data: block, origIndex: i } = entry;
     const active = i <= animatedUpTo;
-    const d = active ? colIdx * 400 : 0;
+    const d = 0;
 
     const dataLabel = isEncrypt ? `P${i + 1}` : `C${i + 1}`;
     const outLabel = isEncrypt ? `C${i + 1}` : `P${i + 1}`;
@@ -246,31 +246,32 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
     if (nextEntry.origIndex !== prevEntry.origIndex + 1) return null;
 
     const i = prevEntry.origIndex;
-    const active = i <= animatedUpTo;
-    const d = active ? colIdx * 400 : 0;
+    const active = i <= connectorUpTo; // inter-block: lights up after block i, before block i+1
+    const d = 0;
 
-    // Source: the CN box for this column (output box).
+    // Source: bottom of the C/P output box for this column.
     const prevSelLeft = prevCx - selW / 2;
     const sourceX = prevSelLeft + selW * selSFrac / 2;
-    const sourceY = Y.outY + 32;          // bottom of output box
+    const sourceY = Y.outY + 32;
 
-    // Destination: right edge of the next column's shift register
-    // (the s-bit slot that just got the new byte shifted in).
-    const nextRegLeft = nextCx - regW / 2;
-    const destX = nextRegLeft + regW - (regW * sFrac) / 2;
+    // Approach the next register from the RIGHT side so the path never
+    // crosses the Discard box (which ends at nextCx + regW/2).
+    // The arrowhead lands on the right outline of the register, not inside it.
+    const nextRegRight = nextCx + regW / 2;
+    const approachX = nextRegRight + 8;
     const destY = Y.regY + (Y.regBot - Y.regY) / 2;
 
-    // Route: down a bit, right, then up into the destination from below.
-    const routeY = Y.outY + 60;
+    // Stagger depth so consecutive horizontal legs never overlap.
+    const routeY = Y.outBot + (i % 2 === 0 ? 40 : 20);
     return (
       <PolyArrow
         key={`fb-${colIdx}`}
         points={[
           [sourceX, sourceY],
           [sourceX, routeY],
-          [destX, routeY],
-          [destX, Y.regBot + 4],   // approach the register from below
-          [destX, destY],
+          [approachX, routeY],
+          [approachX, destY],
+          [nextRegRight, destY],
         ]}
         active={active} delay={d + 360}
       />
@@ -294,14 +295,6 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
         return renderFeedbackArrow(prevEntry, prevCx, nextEntry, nextCx, colIdx);
       })}
 
-      <text x={svgW / 2} y={svgH - 22} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — CFB with s = 8 (per-byte shift register)
-      </text>
-      <text x={svgW / 2} y={svgH - 6} textAnchor="middle" fill="#4a6a8a" fontSize={9}>
-        {total > 4
-          ? `Showing 4 of ${total} segments (one per plaintext byte)`
-          : `${total} segment${total === 1 ? '' : 's'} (one per plaintext byte)`}
-      </text>
     </svg>
   );
 }

@@ -17,7 +17,7 @@ import { DataBox, AESBox, XORCircle, KeyArrow, Arrow, PolyArrow, DiagramDefs } f
  *         ↓
  *        C[i]
  */
-function OFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
+function OFBDiagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClick }) {
   const displayBlocks = blocks || [];
   const colW = 260;
   const startX = 130;
@@ -77,8 +77,7 @@ function OFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
             label: `OFB · Block ${i + 1} · Encrypting ${i === 0 ? 'Nonce' : `O${i}`}`,
           }))} />
 
-        {/* Feedback arrow: AES output → next block's feedback input
-            Route: right from AES box, up, right to next feedback box */}
+        {/* Feedback arrow: AES output → next block — lights up after current block */}
         {i < total - 1 && (
           <PolyArrow
             points={[
@@ -87,7 +86,7 @@ function OFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
               [cx + colW / 2 + 10, Y.fbY + 18],     // Up to feedback level
               [cx + colW - 55, Y.fbY + 18],          // Into next feedback box
             ]}
-            active={active} delay={d + 200}
+            active={i <= connectorUpTo} delay={0}
           />
         )}
 
@@ -133,16 +132,10 @@ function OFBDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       {displayBlocks.map((block, i) => {
         const cx = startX + i * colW + colW / 2;
         const active = i <= animatedUpTo;
-        const d = active ? i * 400 : 0;
+        const d = 0;
         return renderBlock(block, i, cx, active, d, displayBlocks.length);
       })}
 
-      <text x={svgW / 2} y={svgH - 20} textAnchor="middle" fill="#6c6c80" fontSize={11}>
-        ({isEncrypt ? 'a' : 'b'}) {isEncrypt ? 'Encryption' : 'Decryption'} — Feedback from AES output (not ciphertext)
-      </text>
-      <text x={svgW / 2} y={svgH - 5} textAnchor="middle" fill="#4a6a8a" fontSize={9}>
-        Dashed box = keystream generator (independent of data)
-      </text>
     </svg>
   );
 }

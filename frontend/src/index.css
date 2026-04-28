@@ -40,6 +40,30 @@ body {
   min-height: 100vh;
 }
 
+/* ===== Global scrollbar ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 /* ===== Layout ===== */
 .app {
   max-width: 1200px;
@@ -54,14 +78,44 @@ body {
   margin-bottom: 30px;
 }
 
+.hieroglyph-title-band {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.hieroglyph-fill {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 1.15rem;
+  color: var(--accent);
+  opacity: 1;
+  line-height: 1;
+}
+
+.hieroglyph-fill--left {
+  text-align: right;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 60%);
+  mask-image: linear-gradient(to right, transparent 0%, black 60%);
+}
+
+.hieroglyph-fill--right {
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, black 60%);
+  mask-image: linear-gradient(to left, transparent 0%, black 60%);
+}
+
 .app-header h1 {
   font-size: 2rem;
   font-weight: 700;
+  white-space: nowrap;
   background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .app-header p {
@@ -729,9 +783,43 @@ select:focus {
 .flow-diagram-canvas {
   overflow-x: auto;
   padding: 8px 0;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   -webkit-overflow-scrolling: touch;
   text-align: center;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.flow-diagram-canvas::-webkit-scrollbar {
+  height: 3px;
+}
+
+.flow-diagram-canvas::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.flow-diagram-canvas::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.flow-diagram-canvas::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.flow-diagram-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.flow-diagram-caption-note {
+  font-size: 0.72rem;
+  color: #4a6a8a;
 }
 
 .flow-diagram-svg {
