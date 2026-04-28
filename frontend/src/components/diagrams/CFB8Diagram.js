@@ -93,9 +93,9 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClic
 
     // Color the register: lit when active, with a subtle highlight on the s-bit slice
     // that is about to leave (it gets discarded; only the new byte from the right matters).
-    const regFill = active ? '#3a4a5a' : '#252540';
-    const regStroke = active ? '#7aa3c8' : '#4a4a6a';
-    const regSliceFill = active ? '#5a7a9a' : '#2a2a4a';
+    const regFill = active ? '#3a4a5a' : 'var(--diagram-cfb8-reg-inactive)';
+    const regStroke = active ? '#7aa3c8' : 'var(--diagram-inactive-stroke)';
+    const regSliceFill = active ? '#5a7a9a' : 'var(--diagram-inactive-fill)';
 
     return (
       <g key={`seg-${colIdx}`}>
@@ -110,16 +110,16 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClic
             style={{ transition: 'all 0.4s ease' }}
           />
           <text x={regLeft + bMinusSWidth / 2} y={Y.regY + 16} textAnchor="middle"
-            fill={active ? '#cfd8e3' : '#6c6c80'} fontSize={9} fontWeight={600}>
+            fill={active ? '#cfd8e3' : 'var(--diagram-inactive-text)'} fontSize={9} fontWeight={600}>
             b − s bits
           </text>
           <text x={regLeft + bMinusSWidth + sBitWidth / 2} y={Y.regY + 16} textAnchor="middle"
-            fill={active ? '#cfd8e3' : '#6c6c80'} fontSize={9} fontWeight={600}>
+            fill={active ? '#cfd8e3' : 'var(--diagram-inactive-text)'} fontSize={9} fontWeight={600}>
             s bits
           </text>
           {/* Hex preview of the register state (truncated) */}
           <text x={cx} y={Y.regY + 32} textAnchor="middle"
-            fill={active ? '#a8c4d8' : '#4a4a6a'} fontSize={9}
+            fill={active ? '#a8c4d8' : 'var(--diagram-inactive-stroke)'} fontSize={9}
             fontFamily="'Consolas', monospace">
             {block.feedback_input
               ? (block.feedback_input.length > 16
@@ -129,12 +129,12 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClic
           </text>
           {/* Label on the left, matching the reference image */}
           <text x={regLeft - 6} y={Y.regY - 4} textAnchor="end"
-            fill={active ? '#9ab' : '#6c6c80'} fontSize={9} fontWeight={600}>
+            fill={active ? '#9ab' : 'var(--diagram-inactive-text)'} fontSize={9} fontWeight={600}>
             Shift register
           </text>
           {/* I_j label inside (to match reference: arrow labelled I_j into AES) */}
           <text x={cx + regW / 2 + 12} y={Y.regBot + 12} textAnchor="start"
-            fill={active ? '#a8c4d8' : '#6c6c80'} fontSize={10} fontStyle="italic">
+            fill={active ? '#a8c4d8' : 'var(--diagram-inactive-text)'} fontSize={10} fontStyle="italic">
             I{i + 1}
           </text>
         </g>
@@ -156,7 +156,7 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClic
 
         {/* O_j label on AES output */}
         <text x={cx + 60} y={Y.aesBot + 12} textAnchor="start"
-          fill={active ? '#a8c4d8' : '#6c6c80'} fontSize={10} fontStyle="italic"
+          fill={active ? '#a8c4d8' : 'var(--diagram-inactive-text)'} fontSize={10} fontStyle="italic"
           style={{ transition: 'fill 0.4s ease', transitionDelay: `${d + 140}ms` }}>
           O{i + 1}
         </text>
@@ -168,35 +168,35 @@ function CFB8Diagram({ blocks, isEncrypt, animatedUpTo, connectorUpTo, onAesClic
         {/* ── Select s bits | Discard b - s bits ── */}
         <g style={{ transition: 'all 0.4s ease', transitionDelay: `${d + 180}ms` }}>
           <rect x={selLeft} y={Y.selY} width={selSWidth} height={Y.selBot - Y.selY}
-            rx={3} fill={active ? '#5a7a9a' : '#2a2a4a'}
-            stroke={active ? '#7aa3c8' : '#4a4a6a'} strokeWidth={1.3}
+            rx={3} fill={active ? '#5a7a9a' : 'var(--diagram-inactive-fill)'}
+            stroke={active ? '#7aa3c8' : 'var(--diagram-inactive-stroke)'} strokeWidth={1.3}
             style={{ transition: 'all 0.4s ease' }}
           />
           <rect x={selLeft + selSWidth} y={Y.selY} width={selDiscardWidth} height={Y.selBot - Y.selY}
-            rx={3} fill={active ? '#3a3a4a' : '#252540'}
-            stroke={active ? '#5a5a6a' : '#4a4a6a'} strokeWidth={1.3}
+            rx={3} fill={active ? '#3a3a4a' : 'var(--diagram-cfb8-reg-inactive)'}
+            stroke={active ? '#5a5a6a' : 'var(--diagram-inactive-stroke)'} strokeWidth={1.3}
             strokeDasharray="3,2"
             style={{ transition: 'all 0.4s ease' }}
           />
           <text x={selLeft + selSWidth / 2} y={Y.selY + 14} textAnchor="middle"
-            fill={active ? '#fff' : '#6c6c80'} fontSize={9} fontWeight={700}>
+            fill={active ? '#fff' : 'var(--diagram-inactive-text)'} fontSize={9} fontWeight={700}>
             Select
           </text>
           <text x={selLeft + selSWidth / 2} y={Y.selY + 26} textAnchor="middle"
-            fill={active ? '#fff' : '#6c6c80'} fontSize={9}>
+            fill={active ? '#fff' : 'var(--diagram-inactive-text)'} fontSize={9}>
             s bits
           </text>
           <text x={selLeft + selSWidth + selDiscardWidth / 2} y={Y.selY + 14} textAnchor="middle"
-            fill={active ? '#cfd8e3' : '#6c6c80'} fontSize={9} fontWeight={700}>
+            fill={active ? '#cfd8e3' : 'var(--diagram-inactive-text)'} fontSize={9} fontWeight={700}>
             Discard
           </text>
           <text x={selLeft + selSWidth + selDiscardWidth / 2} y={Y.selY + 26} textAnchor="middle"
-            fill={active ? '#cfd8e3' : '#6c6c80'} fontSize={9}>
+            fill={active ? '#cfd8e3' : 'var(--diagram-inactive-text)'} fontSize={9}>
             b − s bits
           </text>
           {/* Show the actual keystream byte under the Select half */}
           <text x={selLeft + selSWidth / 2} y={Y.selBot + 11} textAnchor="middle"
-            fill={active ? '#ffab40' : '#4a4a6a'} fontSize={9}
+            fill={active ? '#ffab40' : 'var(--diagram-inactive-stroke)'} fontSize={9}
             fontFamily="'Consolas', monospace">
             {block.keystream || ''}
           </text>

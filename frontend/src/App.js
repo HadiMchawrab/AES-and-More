@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ModeSelector from './components/ModeSelector';
 import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
@@ -7,6 +7,45 @@ import FlowDiagram from './components/FlowDiagram';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import AuthScreen from './auth/AuthScreen';
 import { encryptLocal, decryptLocal } from './crypto';
+
+const THEME_STORAGE_KEY = 'aes-modes-theme';
+
+function getInitialTheme() {
+  if (typeof window === 'undefined') return 'dark';
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function useTheme() {
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  const toggle = useCallback(() => {
+    setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  return [theme, toggle];
+}
+
+function ThemeToggle({ theme, onToggle }) {
+  const isDark = theme === 'dark';
+  return (
+    <button
+      type="button"
+      className="btn-theme"
+      onClick={onToggle}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {isDark ? '☀' : '☾'}
+    </button>
+  );
+}
 
 function runLocal({ mode, operation, params }) {
   if (operation === 'encrypt') {
@@ -68,7 +107,7 @@ function EncryptDecryptPanel() {
   );
 }
 
-function AesApp() {
+function AesApp({ theme, onToggleTheme }) {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('tool');
 
@@ -88,6 +127,7 @@ function AesApp() {
           <p>An educational tool for understanding how AES block cipher modes work</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem' }}>
             <span style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
+            <ThemeToggle theme={theme} onToggle={onToggleTheme} />
             <button className="btn-logout" onClick={logout}>Log out</button>
           </div>
         </div>
@@ -125,7 +165,7 @@ function AesApp() {
   );
 }
 
-function Gate() {
+function Gate({ theme, onToggleTheme }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
@@ -134,13 +174,24 @@ function Gate() {
       </div>
     );
   }
-  return user ? <AesApp /> : <AuthScreen />;
+  if (user) {
+    return <AesApp theme={theme} onToggleTheme={onToggleTheme} />;
+  }
+  return (
+    <>
+      <div className="theme-toggle-floating">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+      </div>
+      <AuthScreen />
+    </>
+  );
 }
 
 export default function App() {
+  const [theme, toggleTheme] = useTheme();
   return (
     <AuthProvider>
-      <Gate />
+      <Gate theme={theme} onToggleTheme={toggleTheme} />
     </AuthProvider>
   );
 }

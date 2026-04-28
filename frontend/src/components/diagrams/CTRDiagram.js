@@ -51,9 +51,12 @@ function CTRDiagram({ blocks, isEncrypt, animatedUpTo, onAesClick }) {
       <g key={i}>
         {/* Dashed box = parallelizable */}
         <rect x={cx - 65} y={Y.dashTop} width={130} height={Y.dashBot - Y.dashTop} rx={6}
-          fill="none" stroke={active ? '#4a6a8a' : '#2a2a4a'}
+          fill="none"
           strokeWidth={1} strokeDasharray="6,4"
-          style={{ transition: 'stroke 0.4s ease' }}
+          style={{
+            stroke: active ? 'var(--diagram-ofb-feedback-stroke-active)' : 'var(--diagram-ofb-feedback-stroke-inactive)',
+            transition: 'stroke 0.4s ease',
+          }}
         />
 
         {/* Counter */}
