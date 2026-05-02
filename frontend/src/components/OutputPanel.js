@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import BlockVisualization from './BlockVisualization';
+import { hexToBytes, bytesToText } from '../crypto/encode';
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -25,6 +26,38 @@ function CopyButton({ text }) {
   return (
     <button className={`btn-copy ${copied ? 'copied' : ''}`} onClick={handleCopy}>
       {copied ? 'Copied!' : 'Copy'}
+    </button>
+  );
+}
+
+// Detects and strips zero-padding (last byte = N, preceding N-1 bytes = 0x00).
+// Returns stripped hex string, or the original if no valid padding pattern found.
+function autoStripPaddingHex(hexStr) {
+  if (!hexStr || hexStr.length < 4) return hexStr;
+  const lastByte = parseInt(hexStr.slice(-2), 16);
+  if (lastByte < 1 || lastByte > 15 || hexStr.length < lastByte * 2) return hexStr;
+  for (let i = 1; i < lastByte; i++) {
+    const pos = hexStr.length - (i + 1) * 2;
+    if (hexStr.slice(pos, pos + 2) !== '00') return hexStr;
+  }
+  return hexStr.slice(0, hexStr.length - lastByte * 2);
+}
+
+function DownloadButton({ text, filename, bom = false }) {
+  const handleDownload = () => {
+    const content = bom ? '﻿' + text : text;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <button className="btn-copy" onClick={handleDownload}>
+      ↓ Download
     </button>
   );
 }
@@ -63,6 +96,17 @@ function OutputPanel({ result, error, loading }) {
 
   const isEncrypt = result.type === 'encrypt';
 
+  // For decrypt: if the user didn't supply a padSize (pad_size === 0 in result),
+  // auto-detect trailing zero-padding (pattern: last byte = N, preceding N-1 bytes = 0x00)
+  // and strip it so padding bytes don't appear as garbage in display/download.
+  const cleanHex = !isEncrypt && result.pad_size === 0
+    ? autoStripPaddingHex(result.plaintext_hex)
+    : result.plaintext_hex;
+  const paddingWasAutoStripped = cleanHex !== result.plaintext_hex;
+  const cleanText = paddingWasAutoStripped
+    ? (() => { try { return bytesToText(hexToBytes(cleanHex)); } catch { return null; } })()
+    : result.plaintext_text;
+
   return (
     <div className="card">
       <div className="card-title">Output</div>
@@ -73,6 +117,7 @@ function OutputPanel({ result, error, loading }) {
           <div className="label">
             Ciphertext (Hex)
             <CopyButton text={result.ciphertext_hex} />
+            <DownloadButton text={result.ciphertext_hex} filename="ciphertext.hex" />
           </div>
           <div className="value">{result.ciphertext_hex}</div>
           <div
@@ -93,12 +138,15 @@ function OutputPanel({ result, error, loading }) {
           <div className="result-box">
             <div className="label">
               Plaintext (Text)
-              {result.plaintext_text !== null && (
-                <CopyButton text={result.plaintext_text} />
+              {cleanText !== null && (
+                <>
+                  <CopyButton text={cleanText} />
+                  <DownloadButton text={cleanText} filename="plaintext.txt" bom={true} />
+                </>
               )}
             </div>
-            {result.plaintext_text !== null ? (
-              <div className="value">{result.plaintext_text}</div>
+            {cleanText !== null ? (
+              <div className="value">{cleanText}</div>
             ) : (
               <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
                 Decrypted bytes are not valid UTF-8 text. This usually means the
@@ -109,9 +157,10 @@ function OutputPanel({ result, error, loading }) {
           <div className="result-box">
             <div className="label">
               Plaintext (Hex)
-              <CopyButton text={result.plaintext_hex} />
+              <CopyButton text={cleanHex} />
+              <DownloadButton text={cleanHex} filename="plaintext.hex" />
             </div>
-            <div className="value">{result.plaintext_hex}</div>
+            <div className="value">{cleanHex}</div>
           </div>
         </>
       )}

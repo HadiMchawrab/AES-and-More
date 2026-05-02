@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { bytesToHex } from '../crypto/encode';
 
 function generateRandomKeyHex(sizeBytes) {
@@ -18,6 +18,16 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
   const [randomKeyCopied, setRandomKeyCopied] = useState(false);
   const [initialCounter, setInitialCounter] = useState(0);
   const [padSize, setPadSize] = useState(0);
+  const fileInputRef = useRef(null);
+
+  const handleUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setData(ev.target.result.trim());
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const handleCopyRandomKey = async () => {
     if (!randomKey) return;
@@ -89,7 +99,19 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
       </div>
 
       <div className="form-group">
-        <label>{isDecrypt ? 'Ciphertext (hex)' : 'Plaintext'}</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <label style={{ margin: 0 }}>{isDecrypt ? 'Ciphertext (hex)' : 'Plaintext'}</label>
+          <button className="btn-copy" onClick={() => fileInputRef.current?.click()}>
+            ↑ Upload
+          </button>
+        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".txt,.hex"
+          style={{ display: 'none' }}
+          onChange={handleUpload}
+        />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
           {!isDecrypt && (
             <div className="format-toggle">
