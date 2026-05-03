@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { bytesToHex } from '../crypto/encode';
+import { bytesToHex, textToBytes, hexToBytes, bytesToText } from '../crypto/encode';
 
 function generateRandomKeyHex(sizeBytes) {
   const bytes = new Uint8Array(sizeBytes);
@@ -99,6 +99,38 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
     setRandomKey(generateRandomKeyHex(size));
   };
 
+  const handleInputFormatChange = (newFormat) => {
+    if (newFormat === inputFormat) return;
+    if (data) {
+      try {
+        if (newFormat === 'hex') {
+          setData(bytesToHex(textToBytes(data)));
+        } else {
+          setData(bytesToText(hexToBytes(data)) ?? '');
+        }
+      } catch {
+        setData('');
+      }
+    }
+    setInputFormat(newFormat);
+  };
+
+  const handleKeyFormatChange = (newFormat) => {
+    if (newFormat === keyFormat) return;
+    if (key) {
+      try {
+        if (newFormat === 'hex') {
+          setKey(bytesToHex(textToBytes(key)));
+        } else {
+          setKey(bytesToText(hexToBytes(key)) ?? '');
+        }
+      } catch {
+        setKey('');
+      }
+    }
+    setKeyFormat(newFormat);
+  };
+
   const handleSubmit = () => {
     const activeKey = keyMode === 'random' ? randomKey : key.trim();
     const activeKeyFormat = keyMode === 'random' ? 'hex' : keyFormat;
@@ -158,13 +190,13 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
             <div className="format-toggle">
               <button
                 className={inputFormat === 'text' ? 'active' : ''}
-                onClick={() => setInputFormat('text')}
+                onClick={() => handleInputFormatChange('text')}
               >
                 Text
               </button>
               <button
                 className={inputFormat === 'hex' ? 'active' : ''}
-                onClick={() => setInputFormat('hex')}
+                onClick={() => handleInputFormatChange('hex')}
               >
                 Hex
               </button>
@@ -183,7 +215,10 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
         </div>
         <textarea
           value={data}
-          onChange={(e) => setData(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setData((isDecrypt || inputFormat === 'hex') ? v.replace(/[^0-9a-fA-F]/g, '') : v);
+          }}
           placeholder={
             isDecrypt
               ? 'Enter ciphertext in hex (e.g., a1b2c3d4...)'
@@ -233,13 +268,13 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
               <div className="format-toggle">
                 <button
                   className={keyFormat === 'text' ? 'active' : ''}
-                  onClick={() => setKeyFormat('text')}
+                  onClick={() => handleKeyFormatChange('text')}
                 >
                   Text
                 </button>
                 <button
                   className={keyFormat === 'hex' ? 'active' : ''}
-                  onClick={() => setKeyFormat('hex')}
+                  onClick={() => handleKeyFormatChange('hex')}
                 >
                   Hex
                 </button>
@@ -291,7 +326,10 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
             <input
               type="text"
               value={key}
-              onChange={(e) => setKey(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setKey(keyFormat === 'hex' ? v.replace(/[^0-9a-fA-F]/g, '') : v);
+              }}
               placeholder={
                 keyFormat === 'hex'
                   ? 'e.g., 0123456789abcdef0123456789abcdef'
