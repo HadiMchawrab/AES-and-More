@@ -63,7 +63,6 @@ function runLocal({ mode, operation, params }) {
     ciphertext: params.data,
     key: params.key,
     keyFormat: params.keyFormat,
-    padSize: params.padSize || 0,
     initialCounter: params.initialCounter,
   });
 }

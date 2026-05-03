@@ -1,7 +1,7 @@
 import { aesEncryptBlock, aesDecryptBlock, xorBytes } from './aes';
 import {
   BLOCK_SIZE, bytesToHex, bytesToText, concatBytes, splitBlocks,
-  zeroPad, zeroUnpad,
+  zeroPad, zeroUnpad, detectPadSize,
 } from './encode';
 
 const ZERO_IV = new Uint8Array(BLOCK_SIZE);
@@ -50,7 +50,7 @@ export const ECB = {
     };
   },
 
-  decrypt(ciphertext, key, padSize = 0) {
+  decrypt(ciphertext, key) {
     const blocks = splitBlocks(ciphertext);
     const plainBlocks = [];
     const blockDetails = [];
@@ -67,7 +67,9 @@ export const ECB = {
       });
     }
 
-    const plaintext = zeroUnpad(concatBytes(plainBlocks), padSize);
+    const raw = concatBytes(plainBlocks);
+    const padSize = detectPadSize(raw);
+    const plaintext = padSize > 0 ? zeroUnpad(raw, padSize) : raw;
     return {
       plaintext,
       pad_size: padSize,
@@ -122,7 +124,7 @@ export const CBC = {
     };
   },
 
-  decrypt(ciphertext, key, padSize = 0) {
+  decrypt(ciphertext, key) {
     const blocks = splitBlocks(ciphertext);
     const plainBlocks = [];
     const blockDetails = [];
@@ -146,7 +148,9 @@ export const CBC = {
       prevCipher = blocks[i];
     }
 
-    const plaintext = zeroUnpad(concatBytes(plainBlocks), padSize);
+    const raw = concatBytes(plainBlocks);
+    const padSize = detectPadSize(raw);
+    const plaintext = padSize > 0 ? zeroUnpad(raw, padSize) : raw;
     return {
       plaintext,
       pad_size: padSize,
@@ -204,7 +208,7 @@ export const CFB = {
     };
   },
 
-  decrypt(ciphertext, key, padSize = 0) {
+  decrypt(ciphertext, key) {
     const blocks = splitBlocks(ciphertext);
     const plainBlocks = [];
     const blockDetails = [];
@@ -229,7 +233,9 @@ export const CFB = {
       feedback = blocks[i];
     }
 
-    const plaintext = zeroUnpad(concatBytes(plainBlocks), padSize);
+    const raw = concatBytes(plainBlocks);
+    const padSize = detectPadSize(raw);
+    const plaintext = padSize > 0 ? zeroUnpad(raw, padSize) : raw;
     return {
       plaintext,
       pad_size: padSize,
@@ -399,7 +405,7 @@ export const OFB = {
     };
   },
 
-  decrypt(ciphertext, key, padSize = 0) {
+  decrypt(ciphertext, key) {
     const blocks = splitBlocks(ciphertext);
     const plainBlocks = [];
     const blockDetails = [];
@@ -423,7 +429,9 @@ export const OFB = {
       feedback = keystream;
     }
 
-    const plaintext = zeroUnpad(concatBytes(plainBlocks), padSize);
+    const raw = concatBytes(plainBlocks);
+    const padSize = detectPadSize(raw);
+    const plaintext = padSize > 0 ? zeroUnpad(raw, padSize) : raw;
     return {
       plaintext,
       pad_size: padSize,
@@ -484,7 +492,7 @@ export const CTR = {
     };
   },
 
-  decrypt(ciphertext, key, initialCounter = 0, padSize = 0) {
+  decrypt(ciphertext, key, initialCounter = 0) {
     const blocks = splitBlocks(ciphertext);
     const plainBlocks = [];
     const blockDetails = [];
@@ -510,7 +518,9 @@ export const CTR = {
       });
     }
 
-    const plaintext = zeroUnpad(concatBytes(plainBlocks), padSize);
+    const raw = concatBytes(plainBlocks);
+    const padSize = detectPadSize(raw);
+    const plaintext = padSize > 0 ? zeroUnpad(raw, padSize) : raw;
     return {
       plaintext,
       pad_size: padSize,

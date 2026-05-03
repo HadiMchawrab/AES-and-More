@@ -77,17 +77,21 @@ export function zeroPad(data) {
   return { padded, padSize };
 }
 
-export function zeroUnpad(data, padSize = 0) {
-  if (data.length === 0) return data;
-
-  if (padSize === 0) {
-    return data;
+export function detectPadSize(data) {
+  if (data.length === 0) return 0;
+  const lastByte = data[data.length - 1];
+  if (lastByte < 1 || lastByte > 15 || lastByte >= data.length) return 0;
+  for (let i = 1; i < lastByte; i++) {
+    if (data[data.length - 1 - i] !== 0) return 0;
   }
+  return lastByte;
+}
 
-  if (padSize < 0 || padSize >= BLOCK_SIZE || padSize > data.length) {
+export function zeroUnpad(data, padSize) {
+  if (data.length === 0) return data;
+  if (padSize < 1 || padSize >= BLOCK_SIZE || padSize > data.length) {
     throw new Error('Invalid padding size');
   }
-
   return data.slice(0, data.length - padSize);
 }
 

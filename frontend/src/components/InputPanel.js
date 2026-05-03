@@ -17,7 +17,6 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
   const [randomKeySize, setRandomKeySize] = useState(16);
   const [randomKeyCopied, setRandomKeyCopied] = useState(false);
   const [initialCounter, setInitialCounter] = useState(0);
-  const [padSize, setPadSize] = useState(0);
   const fileInputRef = useRef(null);
 
   const handleUpload = (e) => {
@@ -72,7 +71,6 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
       inputFormat,
       keyFormat: activeKeyFormat,
       initialCounter,
-      padSize,
     });
   };
 
@@ -267,20 +265,6 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
             value={initialCounter}
             onChange={(e) => setInitialCounter(parseInt(e.target.value, 10) || 0)}
             min="0"
-            placeholder="0"
-          />
-        </div>
-      )}
-
-      {isDecrypt && (
-        <div className="form-group">
-          <label>Padding Size (bytes removed)</label>
-          <input
-            type="number"
-            value={padSize}
-            onChange={(e) => setPadSize(parseInt(e.target.value, 10) || 0)}
-            min="0"
-            max="15"
             placeholder="0"
           />
         </div>

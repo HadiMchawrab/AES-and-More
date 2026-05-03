@@ -25,7 +25,7 @@ export function encryptLocal({ mode, plaintext, key, inputFormat, keyFormat, ini
   };
 }
 
-export function decryptLocal({ mode, ciphertext, key, keyFormat, padSize = 0, initialCounter = 0 }) {
+export function decryptLocal({ mode, ciphertext, key, keyFormat, initialCounter = 0 }) {
   const impl = MODE_MAP[mode];
   if (!impl) throw new Error(`Unknown mode '${mode}'`);
 
@@ -47,8 +47,8 @@ export function decryptLocal({ mode, ciphertext, key, keyFormat, padSize = 0, in
   }
 
   const result = mode === 'ctr'
-    ? impl.decrypt(ciphertextBytes, keyBytes, initialCounter || 0, padSize)
-    : impl.decrypt(ciphertextBytes, keyBytes, padSize);
+    ? impl.decrypt(ciphertextBytes, keyBytes, initialCounter || 0)
+    : impl.decrypt(ciphertextBytes, keyBytes);
 
   return {
     type: 'decrypt',
