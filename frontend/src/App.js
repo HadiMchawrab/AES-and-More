@@ -107,8 +107,17 @@ function EncryptDecryptPanel() {
 }
 
 function AesApp({ theme, onToggleTheme }) {
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const [activeTab, setActiveTab] = useState('tool');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccount();
+    } catch {
+      setConfirmingDelete(false);
+    }
+  };
 
   return (
     <div className="app">
@@ -127,6 +136,15 @@ function AesApp({ theme, onToggleTheme }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem' }}>
             <span style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+            {confirmingDelete ? (
+              <>
+                <span style={{ color: 'var(--error, #e55)', fontSize: '0.85rem' }}>Delete account?</span>
+                <button className="btn-logout" onClick={handleDeleteAccount}>Confirm</button>
+                <button className="btn-logout" onClick={() => setConfirmingDelete(false)}>Cancel</button>
+              </>
+            ) : (
+              <button className="btn-logout" onClick={() => setConfirmingDelete(true)}>Delete account</button>
+            )}
             <button className="btn-logout" onClick={logout}>Log out</button>
           </div>
         </div>

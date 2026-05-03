@@ -62,6 +62,17 @@ def logout(response: Response) -> None:
     response.delete_cookie(key=COOKIE_NAME, path="/")
 
 
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    response: Response,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    db.delete(current_user)
+    db.commit()
+    response.delete_cookie(key=COOKIE_NAME, path="/")
+
+
 @router.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
