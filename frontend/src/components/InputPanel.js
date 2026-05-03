@@ -18,6 +18,7 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
   const [randomKeyCopied, setRandomKeyCopied] = useState(false);
   const [initialCounter, setInitialCounter] = useState(0);
   const fileInputRef = useRef(null);
+  const keyFileInputRef = useRef(null);
 
   const handleUpload = (e) => {
     const file = e.target.files[0];
@@ -33,9 +34,36 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
       const text = await navigator.clipboard.readText();
       setData(text.trim());
     } catch {
-      // Fallback: focus the textarea so the user can Ctrl+V manually
       document.querySelector('textarea')?.focus();
     }
+  };
+
+  const handleKeyPaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setKey(text.trim());
+    } catch {}
+  };
+
+  const handleKeyUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setKey(ev.target.result.trim());
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleKeyDownload = () => {
+    const activeKey = keyMode === 'random' ? randomKey : key;
+    if (!activeKey) return;
+    const blob = new Blob([activeKey], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'key.txt';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleCopyRandomKey = async () => {
@@ -167,7 +195,23 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
       </div>
 
       <div className="form-group">
-        <label>Key</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <label style={{ margin: 0 }}>Key</label>
+          <button
+            className="btn-copy"
+            onClick={handleKeyDownload}
+            disabled={keyMode === 'manual' ? !key : !randomKey}
+          >
+            ↓ Download
+          </button>
+        </div>
+        <input
+          type="file"
+          ref={keyFileInputRef}
+          accept=".txt,.hex"
+          style={{ display: 'none' }}
+          onChange={handleKeyUpload}
+        />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
           <div className="format-toggle">
             <button
@@ -243,16 +287,21 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
         </div>
 
         {keyMode === 'manual' ? (
-          <input
-            type="text"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder={
-              keyFormat === 'hex'
-                ? 'e.g., 0123456789abcdef0123456789abcdef'
-                : 'e.g., mysecretkey12345'
-            }
-          />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder={
+                keyFormat === 'hex'
+                  ? 'e.g., 0123456789abcdef0123456789abcdef'
+                  : 'e.g., mysecretkey12345'
+              }
+              style={{ flex: 1 }}
+            />
+            <button className="btn-copy" onClick={handleKeyPaste}>Paste</button>
+            <button className="btn-copy" onClick={() => keyFileInputRef.current?.click()}>↑ Upload</button>
+          </div>
         ) : (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <input
