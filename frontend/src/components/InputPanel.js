@@ -181,7 +181,7 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
         <input
           type="file"
           ref={fileInputRef}
-          accept=".txt,.hex"
+          accept={isDecrypt ? '.hex' : '.txt,.hex'}
           style={{ display: 'none' }}
           onChange={handleUpload}
         />
