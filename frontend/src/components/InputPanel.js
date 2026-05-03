@@ -28,6 +28,16 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
     e.target.value = '';
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setData(text.trim());
+    } catch {
+      // Fallback: focus the textarea so the user can Ctrl+V manually
+      document.querySelector('textarea')?.focus();
+    }
+  };
+
   const handleCopyRandomKey = async () => {
     if (!randomKey) return;
     try {
@@ -99,9 +109,14 @@ function InputPanel({ mode, operation, onOperationChange, onSubmit, loading }) {
       <div className="form-group">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <label style={{ margin: 0 }}>{isDecrypt ? 'Ciphertext (hex)' : 'Plaintext'}</label>
-          <button className="btn-copy" onClick={() => fileInputRef.current?.click()}>
-            ↑ Upload
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button className="btn-copy" onClick={handlePaste}>
+              Paste
+            </button>
+            <button className="btn-copy" onClick={() => fileInputRef.current?.click()}>
+              ↑ Upload
+            </button>
+          </div>
         </div>
         <input
           type="file"
